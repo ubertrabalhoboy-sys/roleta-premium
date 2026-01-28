@@ -11,6 +11,7 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPrizeFilter, setSelectedPrizeFilter] = useState('all');
   const [selectedRestaurantFilter, setSelectedRestaurantFilter] = useState('all');
+  const [selectedPreferenceFilter, setSelectedPreferenceFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
   const [showLeadDetails, setShowLeadDetails] = useState(false);
@@ -30,9 +31,14 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
       const matchesPrize = selectedPrizeFilter === 'all' || lead.prize === selectedPrizeFilter;
       const matchesRestaurant = selectedRestaurantFilter === 'all' || lead.restaurant_id === selectedRestaurantFilter;
       
-      return matchesSearch && matchesPrize && matchesRestaurant;
+      const hasPreferences = lead.day_pref && lead.time_pref && lead.fav_product;
+      const matchesPreference = selectedPreferenceFilter === 'all' || 
+        (selectedPreferenceFilter === 'with_preferences' && hasPreferences) ||
+        (selectedPreferenceFilter === 'without_preferences' && !hasPreferences);
+      
+      return matchesSearch && matchesPrize && matchesRestaurant && matchesPreference;
     });
-  }, [leads, searchTerm, selectedPrizeFilter, selectedRestaurantFilter]);
+  }, [leads, searchTerm, selectedPrizeFilter, selectedRestaurantFilter, selectedPreferenceFilter]);
 
   const sortedLeads = useMemo(() => {
     const sorted = [...filteredLeads];
@@ -121,7 +127,7 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
         </div>
 
         {/* Filtros */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
           <SoftInput
             type="text"
             placeholder="Buscar por nome ou telefone..."
@@ -131,7 +137,10 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
           
           <Select value={selectedRestaurantFilter} onValueChange={setSelectedRestaurantFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Filtrar por Restaurante" />
+              <SelectValue>
+                {selectedRestaurantFilter === 'all' ? 'Todos os Restaurantes' : 
+                  restaurants.find(r => r.id === selectedRestaurantFilter)?.name || 'Selecione'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os Restaurantes</SelectItem>
@@ -143,13 +152,29 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
 
           <Select value={selectedPrizeFilter} onValueChange={setSelectedPrizeFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Filtrar por Prêmio" />
+              <SelectValue>
+                {selectedPrizeFilter === 'all' ? 'Todos os Prêmios' : selectedPrizeFilter}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os Prêmios</SelectItem>
               {uniquePrizes.map(prize => (
                 <SelectItem key={prize} value={prize}>{prize}</SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedPreferenceFilter} onValueChange={setSelectedPreferenceFilter}>
+            <SelectTrigger>
+              <SelectValue>
+                {selectedPreferenceFilter === 'all' ? 'Todas Preferências' :
+                  selectedPreferenceFilter === 'with_preferences' ? 'Com Preferências' : 'Sem Preferências'}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas Preferências</SelectItem>
+              <SelectItem value="with_preferences">Com Preferências (Hot Leads)</SelectItem>
+              <SelectItem value="without_preferences">Sem Preferências</SelectItem>
             </SelectContent>
           </Select>
         </div>
