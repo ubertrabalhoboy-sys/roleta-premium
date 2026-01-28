@@ -156,21 +156,7 @@ export default function RestaurantDashboard() {
     a.click();
   };
 
-  // Check notifications on lead changes
-  useEffect(() => {
-    if (!currentRestaurant || leads.length === 0) return;
-    
-    const checkNotifications = async () => {
-      const lastLead = leads[leads.length - 1];
-      if (lastLead && lastLead.day_pref && lastLead.time_pref && lastLead.fav_product) {
-        await NotificationService.checkHotLead(lastLead, currentRestaurant.id);
-      }
-      
-      queryClient.invalidateQueries(['notifications']);
-    };
-    
-    checkNotifications();
-  }, [leads.length, currentRestaurant?.id]);
+
 
   if (!currentRestaurant) return null;
 

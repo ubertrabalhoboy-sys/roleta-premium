@@ -123,6 +123,22 @@ export default function ClientRoleta() {
     
     await createLeadMutation.mutateAsync(lead);
     
+    // Create hot lead notification
+    if (data.day && data.time && data.favProduct) {
+      await base44.entities.Notification.create({
+        restaurant_id: restaurant?.id,
+        type: 'hot_lead',
+        title: '🔥 Lead Quente Detectado!',
+        message: `${tempLeadData.name} completou todos os dados. Pronto para conversão!`,
+        priority: 'high',
+        metadata: {
+          lead_id: lead.id,
+          lead_name: tempLeadData.name,
+          lead_phone: tempLeadData.phone
+        }
+      });
+    }
+    
     // Update metrics
     if (restaurant) {
       updateRestaurantMutation.mutate({
