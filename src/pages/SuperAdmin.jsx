@@ -100,8 +100,8 @@ export default function SuperAdmin() {
   };
 
   const simulateClientView = (restaurant) => {
-    sessionStorage.setItem('simulatedRestaurant', JSON.stringify(restaurant));
-    navigate(createPageUrl('ClientRoleta'));
+    const url = `${window.location.origin}${createPageUrl('ClientRoleta')}?slug=${restaurant.slug}`;
+    window.open(url, '_blank');
   };
 
   const handleSendCoupon = (lead) => {

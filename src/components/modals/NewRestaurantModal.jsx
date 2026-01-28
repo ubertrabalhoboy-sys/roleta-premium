@@ -5,16 +5,18 @@ import SoftInput from '../ui/SoftInput';
 export default function NewRestaurantModal({ show, onSave, onClose }) {
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
+  const [email, setEmail] = useState('');
   const [color, setColor] = useState('#6c5ce7');
 
   const handleSave = () => {
-    if (!name || !slug) {
+    if (!name || !slug || !email) {
       alert('Preencha todos os campos');
       return;
     }
-    onSave({ name, slug, color });
+    onSave({ name, slug, email, color });
     setName('');
     setSlug('');
+    setEmail('');
     setColor('#6c5ce7');
   };
 
@@ -42,6 +44,12 @@ export default function NewRestaurantModal({ show, onSave, onClose }) {
           placeholder="Slug (URL)"
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
+        />
+        <SoftInput
+          placeholder="Email do Proprietário"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
         <input
           type="color"

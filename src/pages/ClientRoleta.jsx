@@ -27,18 +27,40 @@ export default function ClientRoleta() {
   const [tempLeadData, setTempLeadData] = useState({});
 
   useEffect(() => {
-    const restData = sessionStorage.getItem('simulatedRestaurant');
-    if (!restData) {
-      navigate(createPageUrl('Home'));
-      return;
-    }
-    const rest = JSON.parse(restData);
-    setRestaurant(rest);
+    const urlParams = new URLSearchParams(window.location.search);
+    const slug = urlParams.get('slug');
     
-    // Check if already spun
-    const spunKey = `hasSpun_${rest.id}`;
-    if (sessionStorage.getItem(spunKey)) {
-      setHasSpun(true);
+    if (slug) {
+      // Buscar restaurante pelo slug
+      base44.entities.Restaurant.filter({ slug: slug }).then(restaurants => {
+        if (restaurants && restaurants.length > 0) {
+          const rest = restaurants[0];
+          setRestaurant(rest);
+          
+          // Check if already spun
+          const spunKey = `hasSpun_${rest.id}`;
+          if (sessionStorage.getItem(spunKey)) {
+            setHasSpun(true);
+          }
+        } else {
+          navigate(createPageUrl('Home'));
+        }
+      });
+    } else {
+      // Fallback para simulação antiga
+      const restData = sessionStorage.getItem('simulatedRestaurant');
+      if (!restData) {
+        navigate(createPageUrl('Home'));
+        return;
+      }
+      const rest = JSON.parse(restData);
+      setRestaurant(rest);
+      
+      // Check if already spun
+      const spunKey = `hasSpun_${rest.id}`;
+      if (sessionStorage.getItem(spunKey)) {
+        setHasSpun(true);
+      }
     }
   }, [navigate]);
 
