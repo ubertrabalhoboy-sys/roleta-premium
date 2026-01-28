@@ -156,7 +156,7 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
                   restaurants.find(r => r.id === selectedRestaurantFilter)?.name || 'Selecione'}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[9999]">
               <SelectItem value="all">Todos os Restaurantes</SelectItem>
               {restaurants.map(rest => (
                 <SelectItem key={rest.id} value={rest.id}>{rest.name}</SelectItem>
@@ -170,7 +170,7 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
                 {selectedPrizeFilter === 'all' ? 'Todos os Prêmios' : selectedPrizeFilter}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[9999]">
               <SelectItem value="all">Todos os Prêmios</SelectItem>
               {uniquePrizes.map(prize => (
                 <SelectItem key={prize} value={prize}>{prize}</SelectItem>
@@ -188,7 +188,7 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
                   selectedPreferenceFilter === 'with_preferences' ? 'Com Preferências' : 'Sem Preferências'}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[9999]">
               <SelectItem value="all">Todas Preferências</SelectItem>
               <SelectItem value="with_preferences">🔥 Com Preferências (Hot Leads)</SelectItem>
               <SelectItem value="without_preferences">⏳ Sem Preferências</SelectItem>
@@ -201,7 +201,7 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
                 {selectedDayFilter === 'all' ? 'Todos os Dias' : selectedDayFilter}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[9999]">
               <SelectItem value="all">Todos os Dias</SelectItem>
               {uniqueDays.map(day => (
                 <SelectItem key={day} value={day}>📅 {day}</SelectItem>
@@ -215,7 +215,7 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
                 {selectedTimeFilter === 'all' ? 'Todos os Horários' : selectedTimeFilter}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[9999]">
               <SelectItem value="all">Todos os Horários</SelectItem>
               {uniqueTimes.map(time => (
                 <SelectItem key={time} value={time}>🕐 {time}</SelectItem>
