@@ -25,16 +25,23 @@ export default function SmartRemarketingModal({ show, lead, onSend, onClose }) {
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: `Você é um especialista em marketing de restaurantes. Crie 3 mensagens de WhatsApp curtas e envolventes para enviar a um cliente chamado "${lead?.name || 'Cliente'}" que já participou de uma promoção anterior.
 
-Informações:
-- Cliente ganhou anteriormente: ${lead?.prize || 'um prêmio'}
-- Produto favorito do cliente: ${lead?.fav_product || 'não informado'}
-- Promoção atual: ${promotion}
+Informações do Cliente:
+- Nome: ${lead?.name || 'Cliente'}
+- Prêmio ganho anteriormente: ${lead?.prize || 'um prêmio'}
+- Produto favorito: ${lead?.fav_product || 'não informado'}
+- Dia preferido: ${lead?.day_pref || 'não informado'}
+- Horário preferido: ${lead?.time_pref || 'não informado'}
+
+Promoção Atual:
+- Oferta: ${promotion}
 - Tipo de produto: ${productType}
 
+IMPORTANTE: Use as preferências do cliente (dia, horário e produto favorito) para personalizar as mensagens e torná-las mais relevantes e persuasivas.
+
 Crie 3 versões diferentes:
-1. PERSUASIVA: Focada em urgência, benefícios e call-to-action forte
-2. BRINCALHONA: Tom descontraído, emojis e linguagem informal
-3. NEUTRA: Profissional, clara e direta
+1. PERSUASIVA: Focada em urgência, benefícios e call-to-action forte. Mencione as preferências dele.
+2. BRINCALHONA: Tom descontraído, emojis e linguagem informal. Use as preferências de forma divertida.
+3. NEUTRA: Profissional, clara e direta. Inclua as preferências de forma objetiva.
 
 IMPORTANTE: Cada mensagem deve ter no máximo 4 linhas e incluir emojis apropriados.`,
         response_json_schema: {

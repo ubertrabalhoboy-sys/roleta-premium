@@ -8,6 +8,7 @@ import SoftButton from '@/components/ui/SoftButton';
 import SoftInput from '@/components/ui/SoftInput';
 import { format } from 'date-fns';
 import LeadAnalyticsReport from '@/components/reports/LeadAnalyticsReport';
+import SmartRemarketingModal from '@/components/modals/SmartRemarketingModal';
 
 export default function LeadsManagement() {
   const navigate = useNavigate();
@@ -22,6 +23,8 @@ export default function LeadsManagement() {
   const [customDiscount, setCustomDiscount] = useState('50% OFF');
   const [showCouponModal, setShowCouponModal] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [showSmartRemarketing, setShowSmartRemarketing] = useState(false);
+  const [selectedLeadForSmart, setSelectedLeadForSmart] = useState(null);
 
   useEffect(() => {
     const restData = sessionStorage.getItem('currentRestaurant');
@@ -137,6 +140,26 @@ export default function LeadsManagement() {
     
     setShowCouponModal(false);
     setSelectedLeads([]);
+  };
+
+  const handleSmartRemarketing = (lead) => {
+    setSelectedLeadForSmart(lead);
+    setShowSmartRemarketing(true);
+  };
+
+  const sendSmartWhatsApp = (message) => {
+    if (selectedLeadForSmart) {
+      const url = `https://wa.me/55${selectedLeadForSmart.phone}?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+      
+      updateLeadMutation.mutate({ 
+        id: selectedLeadForSmart.id, 
+        data: { sent_by_admin: true } 
+      });
+      
+      setShowSmartRemarketing(false);
+      setSelectedLeadForSmart(null);
+    }
   };
 
   const uniquePrizes = [...new Set(leads.map(lead => lead.prize).filter(Boolean))];
@@ -335,12 +358,9 @@ export default function LeadsManagement() {
                     <td className="p-4 border-b border-black/5">
                       <SoftButton 
                         variant="whatsapp" 
-                        onClick={() => {
-                          const msg = `Olá ${lead.name}! 🎉\n\nParabéns por participar da nossa roleta!\n\nSeu prêmio: *${lead.prize}*\n\nGostaria de fazer seu pedido agora? 😋`;
-                          window.open(`https://wa.me/55${lead.phone}?text=${encodeURIComponent(msg)}`, '_blank');
-                          updateLeadMutation.mutate({ id: lead.id, data: { sent_by_admin: true } });
-                        }}
+                        onClick={() => handleSmartRemarketing(lead)}
                         style={{ padding: '5px 10px', fontSize: '0.8rem' }}
+                        title="Remarketing Inteligente com IA"
                       >
                         <i className="fab fa-whatsapp"></i>
                       </SoftButton>
@@ -411,6 +431,17 @@ export default function LeadsManagement() {
           `}</style>
         </div>
       )}
+
+      {/* Smart Remarketing Modal */}
+      <SmartRemarketingModal 
+        show={showSmartRemarketing}
+        lead={selectedLeadForSmart}
+        onSend={sendSmartWhatsApp}
+        onClose={() => { 
+          setShowSmartRemarketing(false); 
+          setSelectedLeadForSmart(null); 
+        }} 
+      />
 
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;900&display=swap" rel="stylesheet" />
