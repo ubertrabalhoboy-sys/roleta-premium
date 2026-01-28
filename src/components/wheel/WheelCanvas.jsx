@@ -48,7 +48,26 @@ const WheelCanvas = forwardRef(({ prizes, onSpinEnd }, ref) => {
     const degrees = startAngleRef.current * 180 / Math.PI + 90;
     const arcd = arc * 180 / Math.PI;
     const index = Math.floor((360 - degrees % 360) / arcd) % prizes.length;
-    const prize = prizes[index];
+    let prize = prizes[index];
+    
+    // Check if prize is available
+    if (prize) {
+      const isExpired = prize.expiration_date && new Date(prize.expiration_date) < new Date();
+      const hasReachedLimit = prize.limit_count && (prize.current_count || 0) >= prize.limit_count;
+      
+      if (isExpired || hasReachedLimit) {
+        // Find alternative available prize
+        const availablePrizes = prizes.filter(p => {
+          const pExpired = p.expiration_date && new Date(p.expiration_date) < new Date();
+          const pLimitReached = p.limit_count && (p.current_count || 0) >= p.limit_count;
+          return !pExpired && !pLimitReached;
+        });
+        
+        if (availablePrizes.length > 0) {
+          prize = availablePrizes[Math.floor(Math.random() * availablePrizes.length)];
+        }
+      }
+    }
     
     if (onSpinEnd && prize) {
       onSpinEnd(prize);

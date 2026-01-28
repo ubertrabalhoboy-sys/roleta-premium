@@ -113,10 +113,17 @@ export default function ClientRoleta() {
     wheelRef.current?.spin();
   };
 
-  const handleSpinEnd = (prize) => {
+  const handleSpinEnd = async (prize) => {
     setIsSpinning(false);
     setWonPrize(prize);
     setShowBalloons(true);
+    
+    // Update prize count
+    if (prize.id) {
+      await base44.entities.Prize.update(prize.id, {
+        current_count: (prize.current_count || 0) + 1
+      });
+    }
     
     setTimeout(() => {
       setShowBalloons(false);

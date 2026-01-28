@@ -280,6 +280,41 @@ export default function SuperAdmin() {
           </div>
         </div>
 
+        {/* Prize Stock Overview */}
+        <SoftCard className="mb-6">
+          <h3 className="font-semibold text-lg text-[#2d3436] mb-4">
+            <i className="fas fa-gift mr-2 text-[#6c5ce7]"></i>
+            Estoque de Prêmios (Todos Restaurantes)
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {restaurants.map(rest => {
+              const restPrizes = prizes.filter(p => p.restaurant_id === rest.id);
+              if (restPrizes.length === 0) return null;
+
+              return (
+                <div key={rest.id} className="p-4 rounded-lg" style={{ background: '#f8faff', border: '1px solid #e0e6f0' }}>
+                  <h4 className="font-semibold text-sm text-[#2d3436] mb-2">{rest.name}</h4>
+                  <div className="space-y-1 text-xs">
+                    {restPrizes.map(prize => {
+                      const remaining = prize.limit_count ? (prize.limit_count - (prize.current_count || 0)) : '∞';
+                      const isLow = prize.limit_count && remaining <= 3 && remaining > 0;
+                      const isEmpty = remaining === 0;
+                      const tierEmoji = { common: '⚪', rare: '🔵', epic: '🟣' }[prize.tier || 'common'];
+
+                      return (
+                        <div key={prize.id} className={`flex justify-between items-center ${isEmpty ? 'text-red-600' : isLow ? 'text-orange-600' : 'text-[#636e72]'}`}>
+                          <span>{tierEmoji} {prize.name}</span>
+                          <span className="font-semibold">{remaining}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SoftCard>
+
         {/* Restaurants Table */}
         <SoftCard>
           <div className="flex justify-between items-center mb-5">
