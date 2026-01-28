@@ -50,12 +50,14 @@
 import RestaurantDashboard from './pages/RestaurantDashboard';
 import Home from './pages/Home';
 import SuperAdmin from './pages/SuperAdmin';
+import ClientRoleta from './pages/ClientRoleta';
 
 
 export const PAGES = {
     "RestaurantDashboard": RestaurantDashboard,
     "Home": Home,
     "SuperAdmin": SuperAdmin,
+    "ClientRoleta": ClientRoleta,
 }
 
 export const pagesConfig = {
