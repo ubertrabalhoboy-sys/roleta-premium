@@ -122,6 +122,9 @@ export default function RestaurantDashboard() {
             <SoftButton variant="primary">
               <i className="fas fa-chart-line mr-2"></i> Dashboard
             </SoftButton>
+            <SoftButton onClick={() => navigate(createPageUrl('LeadsManagement'))}>
+              <i className="fas fa-users-cog mr-2"></i> Gerenciar Leads
+            </SoftButton>
             <SoftButton onClick={() => setShowCRM(true)}>
               <i className="fas fa-users mr-2"></i> Clientes CRM
             </SoftButton>
