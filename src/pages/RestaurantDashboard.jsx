@@ -166,16 +166,6 @@ export default function RestaurantDashboard() {
         await NotificationService.checkHotLead(lastLead, currentRestaurant.id);
       }
       
-      await NotificationService.checkPrizeTrend(prizes, leads, currentRestaurant.id);
-      await NotificationService.checkMilestones(currentRestaurant, leads.length);
-      
-      if (leads.length > 0) {
-        const sortedLeads = [...leads].sort((a, b) => 
-          new Date(b.created_date) - new Date(a.created_date)
-        );
-        await NotificationService.checkInactivity(currentRestaurant, sortedLeads[0]?.created_date);
-      }
-      
       queryClient.invalidateQueries(['notifications']);
     };
     
