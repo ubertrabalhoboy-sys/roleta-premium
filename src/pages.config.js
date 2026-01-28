@@ -51,6 +51,7 @@ import RestaurantDashboard from './pages/RestaurantDashboard';
 import Home from './pages/Home';
 import SuperAdmin from './pages/SuperAdmin';
 import ClientRoleta from './pages/ClientRoleta';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
@@ -63,4 +64,5 @@ export const PAGES = {
 export const pagesConfig = {
     mainPage: "RestaurantDashboard",
     Pages: PAGES,
+    Layout: __Layout,
 };
