@@ -16,13 +16,6 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
   const [showLeadDetails, setShowLeadDetails] = useState(false);
   const [selectedLeadForDetails, setSelectedLeadForDetails] = useState(null);
 
-  if (!show) return null;
-
-  const getRestName = (restId) => {
-    const rest = restaurants.find(r => r.id === restId);
-    return rest?.name || '?';
-  };
-
   const uniquePrizes = useMemo(() => {
     const prizes = [...new Set(leads.map(l => l.prize).filter(Boolean))];
     return prizes;
@@ -102,6 +95,13 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
       <ArrowUp className="w-3 h-3 inline ml-1" /> : 
       <ArrowDown className="w-3 h-3 inline ml-1" />;
   };
+
+  const getRestName = (restId) => {
+    const rest = restaurants.find(r => r.id === restId);
+    return rest?.name || '?';
+  };
+
+  if (!show) return null;
 
   return (
     <div 
