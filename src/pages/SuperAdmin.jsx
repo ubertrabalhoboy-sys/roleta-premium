@@ -54,13 +54,25 @@ export default function SuperAdmin() {
   });
 
   const createRestaurantMutation = useMutation({
-    mutationFn: (data) => base44.entities.Restaurant.create({
-      ...data,
-      status: 'active',
-      metrics_access: 0,
-      metrics_spins: 0,
-      metrics_leads: 0
-    }),
+    mutationFn: async (data) => {
+      const restaurant = await base44.entities.Restaurant.create({
+        name: data.name,
+        slug: data.slug,
+        owner_email: data.email,
+        color: data.color,
+        status: 'active',
+        metrics_access: 0,
+        metrics_spins: 0,
+        metrics_leads: 0
+      });
+      
+      // Enviar convite para o proprietário
+      if (data.email) {
+        await base44.users.inviteUser(data.email, 'user');
+      }
+      
+      return restaurant;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['restaurants']);
       setShowNewRestaurant(false);
