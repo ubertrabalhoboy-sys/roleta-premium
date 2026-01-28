@@ -53,6 +53,11 @@ export default function SuperAdmin() {
     queryFn: () => base44.entities.Metric.list()
   });
 
+  const { data: prizes = [] } = useQuery({
+    queryKey: ['all-prizes'],
+    queryFn: () => base44.entities.Prize.list()
+  });
+
   const createRestaurantMutation = useMutation({
     mutationFn: async (data) => {
       const restaurant = await base44.entities.Restaurant.create({
