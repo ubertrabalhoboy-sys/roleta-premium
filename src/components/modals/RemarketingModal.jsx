@@ -2,11 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { format, isToday, parseISO } from 'date-fns';
 import SoftButton from '../ui/SoftButton';
 import SoftInput from '../ui/SoftInput';
-import WhatsAppModal from './WhatsAppModal';
+import SmartRemarketingModal from './SmartRemarketingModal';
 
 export default function RemarketingModal({ show, leads = [], onClose }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [showSmartRemarketing, setShowSmartRemarketing] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
 
   const todayRemarketingLeads = useMemo(() => {
@@ -31,14 +31,14 @@ export default function RemarketingModal({ show, leads = [], onClose }) {
 
   const handleSendMessage = (lead) => {
     setSelectedLead(lead);
-    setShowWhatsApp(true);
+    setShowSmartRemarketing(true);
   };
 
   const sendWhatsApp = (message) => {
     if (selectedLead) {
       const url = `https://wa.me/55${selectedLead.phone}?text=${encodeURIComponent(message)}`;
       window.open(url, '_blank');
-      setShowWhatsApp(false);
+      setShowSmartRemarketing(false);
       setSelectedLead(null);
     }
   };
@@ -151,14 +151,12 @@ export default function RemarketingModal({ show, leads = [], onClose }) {
         )}
       </div>
 
-      <WhatsAppModal 
-        show={showWhatsApp}
-        clientName={selectedLead?.name}
-        clientPhone={selectedLead?.phone}
-        favProduct={selectedLead?.fav_product}
+      <SmartRemarketingModal 
+        show={showSmartRemarketing}
+        lead={selectedLead}
         onSend={sendWhatsApp}
         onClose={() => { 
-          setShowWhatsApp(false); 
+          setShowSmartRemarketing(false); 
           setSelectedLead(null); 
         }} 
       />
