@@ -7,6 +7,7 @@ import SoftCard from '@/components/ui/SoftCard';
 import SoftButton from '@/components/ui/SoftButton';
 import SoftInput from '@/components/ui/SoftInput';
 import { format } from 'date-fns';
+import LeadAnalyticsReport from '@/components/reports/LeadAnalyticsReport';
 
 export default function LeadsManagement() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function LeadsManagement() {
   const [selectedLeads, setSelectedLeads] = useState([]);
   const [customDiscount, setCustomDiscount] = useState('50% OFF');
   const [showCouponModal, setShowCouponModal] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     const restData = sessionStorage.getItem('currentRestaurant');
@@ -149,10 +151,22 @@ export default function LeadsManagement() {
             <h2 className="text-2xl font-bold text-[#2d3436]">Gerenciamento de Leads</h2>
             <p className="text-[#636e72] text-sm mt-1">{restaurant?.name}</p>
           </div>
-          <SoftButton onClick={goBack}>
-            <i className="fas fa-arrow-left mr-2"></i> Voltar
-          </SoftButton>
+          <div className="flex gap-2">
+            <SoftButton onClick={() => setShowReport(!showReport)} variant={showReport ? 'primary' : 'default'}>
+              <i className="fas fa-chart-bar mr-2"></i> {showReport ? 'Ocultar' : 'Exibir'} Relatório
+            </SoftButton>
+            <SoftButton onClick={goBack}>
+              <i className="fas fa-arrow-left mr-2"></i> Voltar
+            </SoftButton>
+          </div>
         </div>
+
+        {/* Analytics Report */}
+        {showReport && (
+          <div className="mb-6">
+            <LeadAnalyticsReport leads={leads} />
+          </div>
+        )}
 
         {/* Filters */}
         <SoftCard className="mb-6">
