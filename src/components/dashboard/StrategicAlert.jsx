@@ -16,9 +16,9 @@ export default function StrategicAlert({ count, onAction }) {
     >
       <i className="fab fa-whatsapp text-3xl"></i>
       <div>
-        <h4 className="m-0 font-semibold">Clientes Quentes Detectados!</h4>
+        <h4 className="m-0 font-semibold">🔥 Remarketing Disponível!</h4>
         <p className="m-0 text-sm">
-          Existem <strong>{count}</strong> clientes com perfil completo aguardando contato.
+          Existem <strong>{count}</strong> cliente{count !== 1 ? 's' : ''} marcado{count !== 1 ? 's' : ''} para remarketing hoje.
         </p>
       </div>
       <SoftButton variant="whatsapp" onClick={onAction} style={{ marginLeft: 'auto' }}>

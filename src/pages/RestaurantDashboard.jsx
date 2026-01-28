@@ -191,7 +191,18 @@ export default function RestaurantDashboard() {
   };
 
   const conversion = metricsData.access > 0 ? ((metricsData.leads / metricsData.access) * 100).toFixed(1) : '0';
-  const hotLeads = leads.filter(l => l.day_pref && l.fav_product).length;
+  
+  const remarketingLeads = leads.filter(lead => {
+    if (!lead.remarketing_eligible_date) return false;
+    try {
+      const leadDate = new Date(lead.remarketing_eligible_date);
+      const today = new Date();
+      return leadDate.toDateString() === today.toDateString();
+    } catch {
+      return false;
+    }
+  });
+  
   const unreadNotifications = notifications.filter(n => !n.read).length;
 
   // Generate chart data
@@ -278,7 +289,7 @@ export default function RestaurantDashboard() {
           </div>
 
           {/* Strategic Alert */}
-          <StrategicAlert count={hotLeads} onAction={() => setShowCRM(true)} />
+          <StrategicAlert count={remarketingLeads.length} onAction={() => setShowRemarketing(true)} />
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
