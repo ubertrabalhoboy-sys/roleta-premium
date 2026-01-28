@@ -10,18 +10,30 @@ export class NotificationService {
   // Verificar e criar notificação de lead quente
   static async checkHotLead(lead, restaurantId) {
     if (lead.day_pref && lead.time_pref && lead.fav_product) {
-      await this.create({
+      // Verificar se já existe uma notificação não lida para este lead
+      const existingNotifications = await base44.entities.Notification.filter({
         restaurant_id: restaurantId,
-        type: 'hot_lead',
-        title: '🔥 Lead Quente Detectado!',
-        message: `${lead.name} completou todos os dados. Pronto para conversão!`,
-        priority: 'high',
-        metadata: {
-          lead_id: lead.id,
-          lead_name: lead.name,
-          lead_phone: lead.phone
-        }
+        type: 'hot_lead'
       });
+      
+      const hasNotification = existingNotifications.some(
+        n => !n.read && n.metadata?.lead_id === lead.id
+      );
+      
+      if (!hasNotification) {
+        await this.create({
+          restaurant_id: restaurantId,
+          type: 'hot_lead',
+          title: '🔥 Lead Quente Detectado!',
+          message: `${lead.name} completou todos os dados. Pronto para conversão!`,
+          priority: 'high',
+          metadata: {
+            lead_id: lead.id,
+            lead_name: lead.name,
+            lead_phone: lead.phone
+          }
+        });
+      }
     }
   }
 
