@@ -4,8 +4,9 @@ import SoftButton from '../ui/SoftButton';
 import SoftInput from '../ui/SoftInput';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import LeadDetailsModal from './LeadDetailsModal';
+import LeadCard from '../cards/LeadCard';
 import { base44 } from '@/api/base44Client';
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, LayoutGrid, List } from 'lucide-react';
 
 export default function GlobalLeadsModal({ show, leads = [], restaurants = [], onSendCoupon, onClose }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,6 +19,7 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
   const [sortOrder, setSortOrder] = useState('desc');
   const [showLeadDetails, setShowLeadDetails] = useState(false);
   const [selectedLeadForDetails, setSelectedLeadForDetails] = useState(null);
+  const [viewMode, setViewMode] = useState('table');
 
   const uniquePrizes = useMemo(() => {
     const prizes = [...new Set(leads.map(l => l.prize).filter(Boolean))];
@@ -224,110 +226,156 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
           </Select>
         </div>
 
-        <div className="text-sm text-[#636e72] mb-3">
-          Mostrando {sortedLeads.length} de {leads.length} leads
+        <div className="flex justify-between items-center mb-3">
+          <div className="text-sm text-[#636e72]">
+            Mostrando {sortedLeads.length} de {leads.length} leads
+          </div>
+
+          <div className="flex gap-2">
+            <SoftButton 
+              variant={viewMode === 'table' ? 'primary' : 'default'}
+              onClick={() => setViewMode('table')}
+              style={{ padding: '8px 12px', fontSize: '0.85rem' }}
+              title="Visualização em tabela"
+            >
+              <List className="w-4 h-4" />
+            </SoftButton>
+            <SoftButton 
+              variant={viewMode === 'cards' ? 'primary' : 'default'}
+              onClick={() => setViewMode('cards')}
+              style={{ padding: '8px 12px', fontSize: '0.85rem' }}
+              title="Visualização em cards"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </SoftButton>
+          </div>
         </div>
         
-        <div 
-          className="overflow-x-auto rounded-[15px] p-2.5"
-          style={{
-            boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff',
-            background: '#eef2f5',
-            maxHeight: '500px',
-            overflowY: 'auto'
-          }}
-        >
-          <table className="w-full border-collapse min-w-[1000px]">
-            <thead>
-              <tr>
-                <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Restaurante</th>
-                <th 
-                  className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5 cursor-pointer hover:text-[#6c5ce7]"
-                  onClick={() => handleSort('name')}
-                >
-                  Cliente {getSortIcon('name')}
-                </th>
-                <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Prêmio</th>
-                <th 
-                  className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5 cursor-pointer hover:text-[#6c5ce7]"
-                  onClick={() => handleSort('date')}
-                >
-                  Data Criação {getSortIcon('date')}
-                </th>
-                <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Preferências</th>
-                <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Status</th>
-                <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedLeads.map((lead, idx) => (
-                <tr key={idx}>
-                  <td className="p-4 border-b border-black/5 font-medium text-sm">
-                    {getRestName(lead.restaurant_id)}
-                  </td>
-                  <td className="p-4 border-b border-black/5">
-                    <div className="font-medium">{lead.name}</div>
-                    <small className="text-[#636e72]">{lead.phone}</small>
-                  </td>
-                  <td className="p-4 border-b border-black/5">
-                    <span className="text-sm">{lead.prize || '-'}</span>
-                  </td>
-                  <td className="p-4 border-b border-black/5">
-                    <span className="text-sm">
-                      {lead.created_date ? format(new Date(lead.created_date), 'dd/MM/yyyy HH:mm') : '-'}
-                    </span>
-                  </td>
-                  <td className="p-4 border-b border-black/5">
-                    {lead.day_pref ? (
-                      <small>
-                        {lead.day_pref} / {lead.time_pref}<br />
-                        ❤️ {lead.fav_product}
-                      </small>
-                    ) : (
-                      <small className="text-[#636e72]">Não informado</small>
-                    )}
-                  </td>
-                  <td className="p-4 border-b border-black/5">
-                    <span 
-                      className="px-2.5 py-1 rounded-full text-xs font-semibold"
-                      style={{ 
-                        background: lead.sent_by_admin ? 'rgba(0, 184, 148, 0.15)' : 'rgba(214, 48, 49, 0.15)', 
-                        color: lead.sent_by_admin ? '#00b894' : '#d63031' 
-                      }}
-                    >
-                      {lead.sent_by_admin ? 'Enviado' : 'Pendente'}
-                    </span>
-                  </td>
-                  <td className="p-4 border-b border-black/5">
-                    <div className="flex gap-2 flex-wrap">
-                      <SoftButton 
-                        variant="whatsapp" 
-                        onClick={() => onSendCoupon(lead)}
-                        style={{ padding: '5px 10px', fontSize: '0.8rem' }}
-                      >
-                        Enviar 80%
-                      </SoftButton>
-                      <SoftButton 
-                        onClick={() => handleViewDetails(lead)}
-                        style={{ padding: '5px 10px', fontSize: '0.8rem' }}
-                      >
-                        <i className="fas fa-eye mr-1"></i> Detalhes
-                      </SoftButton>
-                      <SoftButton 
-                        variant="primary"
-                        onClick={() => handleSendRemarketing(lead)}
-                        style={{ padding: '5px 10px', fontSize: '0.8rem' }}
-                        title="Enviar notificação de remarketing ao restaurante"
-                      >
-                        <i className="fas fa-bullhorn mr-1"></i> Remarketing
-                      </SoftButton>
-                    </div>
-                  </td>
+        {viewMode === 'table' ? (
+          <div 
+            className="overflow-x-auto rounded-[15px] p-2.5"
+            style={{
+              boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff',
+              background: '#eef2f5',
+              maxHeight: '500px',
+              overflowY: 'auto'
+            }}
+          >
+            <table className="w-full border-collapse min-w-[1000px]">
+              <thead>
+                <tr>
+                  <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Restaurante</th>
+                  <th 
+                    className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5 cursor-pointer hover:text-[#6c5ce7]"
+                    onClick={() => handleSort('name')}
+                  >
+                    Cliente {getSortIcon('name')}
+                  </th>
+                  <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Prêmio</th>
+                  <th 
+                    className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5 cursor-pointer hover:text-[#6c5ce7]"
+                    onClick={() => handleSort('date')}
+                  >
+                    Data Criação {getSortIcon('date')}
+                  </th>
+                  <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Preferências</th>
+                  <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Status</th>
+                  <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Ações</th>
                 </tr>
+              </thead>
+              <tbody>
+                {sortedLeads.map((lead, idx) => (
+                  <tr key={idx}>
+                    <td className="p-4 border-b border-black/5 font-medium text-sm">
+                      {getRestName(lead.restaurant_id)}
+                    </td>
+                    <td className="p-4 border-b border-black/5">
+                      <div className="font-medium">{lead.name}</div>
+                      <small className="text-[#636e72]">{lead.phone}</small>
+                    </td>
+                    <td className="p-4 border-b border-black/5">
+                      <span className="text-sm">{lead.prize || '-'}</span>
+                    </td>
+                    <td className="p-4 border-b border-black/5">
+                      <span className="text-sm">
+                        {lead.created_date ? format(new Date(lead.created_date), 'dd/MM/yyyy HH:mm') : '-'}
+                      </span>
+                    </td>
+                    <td className="p-4 border-b border-black/5">
+                      {lead.day_pref ? (
+                        <small>
+                          {lead.day_pref} / {lead.time_pref}<br />
+                          ❤️ {lead.fav_product}
+                        </small>
+                      ) : (
+                        <small className="text-[#636e72]">Não informado</small>
+                      )}
+                    </td>
+                    <td className="p-4 border-b border-black/5">
+                      <span 
+                        className="px-2.5 py-1 rounded-full text-xs font-semibold"
+                        style={{ 
+                          background: lead.sent_by_admin ? 'rgba(0, 184, 148, 0.15)' : 'rgba(214, 48, 49, 0.15)', 
+                          color: lead.sent_by_admin ? '#00b894' : '#d63031' 
+                        }}
+                      >
+                        {lead.sent_by_admin ? 'Enviado' : 'Pendente'}
+                      </span>
+                    </td>
+                    <td className="p-4 border-b border-black/5">
+                      <div className="flex gap-2 flex-wrap">
+                        <SoftButton 
+                          variant="whatsapp" 
+                          onClick={() => onSendCoupon(lead)}
+                          style={{ padding: '5px 10px', fontSize: '0.8rem' }}
+                        >
+                          Enviar 80%
+                        </SoftButton>
+                        <SoftButton 
+                          onClick={() => handleViewDetails(lead)}
+                          style={{ padding: '5px 10px', fontSize: '0.8rem' }}
+                        >
+                          <i className="fas fa-eye mr-1"></i> Detalhes
+                        </SoftButton>
+                        <SoftButton 
+                          variant="primary"
+                          onClick={() => handleSendRemarketing(lead)}
+                          style={{ padding: '5px 10px', fontSize: '0.8rem' }}
+                          title="Enviar notificação de remarketing ao restaurante"
+                        >
+                          <i className="fas fa-bullhorn mr-1"></i> Remarketing
+                        </SoftButton>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div 
+            className="rounded-[15px] p-2.5"
+            style={{
+              boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff',
+              background: '#eef2f5',
+              maxHeight: '500px',
+              overflowY: 'auto'
+            }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
+              {sortedLeads.map((lead, idx) => (
+                <LeadCard
+                  key={idx}
+                  lead={lead}
+                  getRestName={getRestName}
+                  onSendCoupon={onSendCoupon}
+                  onViewDetails={handleViewDetails}
+                  onSendRemarketing={handleSendRemarketing}
+                />
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <LeadDetailsModal 
