@@ -108,6 +108,10 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
       }
     });
 
+    await base44.entities.Lead.update(lead.id, { 
+      remarketing_eligible_date: new Date().toISOString() 
+    });
+
     alert(`Notificação de remarketing enviada para ${restaurant.name}!`);
   };
 
