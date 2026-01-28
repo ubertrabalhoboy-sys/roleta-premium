@@ -12,6 +12,8 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
   const [selectedPrizeFilter, setSelectedPrizeFilter] = useState('all');
   const [selectedRestaurantFilter, setSelectedRestaurantFilter] = useState('all');
   const [selectedPreferenceFilter, setSelectedPreferenceFilter] = useState('all');
+  const [selectedDayFilter, setSelectedDayFilter] = useState('all');
+  const [selectedTimeFilter, setSelectedTimeFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
   const [showLeadDetails, setShowLeadDetails] = useState(false);
@@ -22,6 +24,16 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
     return prizes;
   }, [leads]);
 
+  const uniqueDays = useMemo(() => {
+    const days = [...new Set(leads.map(l => l.day_pref).filter(Boolean))];
+    return days;
+  }, [leads]);
+
+  const uniqueTimes = useMemo(() => {
+    const times = [...new Set(leads.map(l => l.time_pref).filter(Boolean))];
+    return times;
+  }, [leads]);
+
   const filteredLeads = useMemo(() => {
     return leads.filter(lead => {
       const matchesSearch = !searchTerm || 
@@ -30,15 +42,17 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
       
       const matchesPrize = selectedPrizeFilter === 'all' || lead.prize === selectedPrizeFilter;
       const matchesRestaurant = selectedRestaurantFilter === 'all' || lead.restaurant_id === selectedRestaurantFilter;
+      const matchesDay = selectedDayFilter === 'all' || lead.day_pref === selectedDayFilter;
+      const matchesTime = selectedTimeFilter === 'all' || lead.time_pref === selectedTimeFilter;
       
       const hasPreferences = lead.day_pref && lead.time_pref && lead.fav_product;
       const matchesPreference = selectedPreferenceFilter === 'all' || 
         (selectedPreferenceFilter === 'with_preferences' && hasPreferences) ||
         (selectedPreferenceFilter === 'without_preferences' && !hasPreferences);
       
-      return matchesSearch && matchesPrize && matchesRestaurant && matchesPreference;
+      return matchesSearch && matchesPrize && matchesRestaurant && matchesPreference && matchesDay && matchesTime;
     });
-  }, [leads, searchTerm, selectedPrizeFilter, selectedRestaurantFilter, selectedPreferenceFilter]);
+  }, [leads, searchTerm, selectedPrizeFilter, selectedRestaurantFilter, selectedPreferenceFilter, selectedDayFilter, selectedTimeFilter]);
 
   const sortedLeads = useMemo(() => {
     const sorted = [...filteredLeads];
@@ -126,8 +140,8 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
           <SoftButton onClick={onClose}>Fechar</SoftButton>
         </div>
 
-        {/* Filtros */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+        {/* Filtros Principais */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
           <SoftInput
             type="text"
             placeholder="Buscar por nome ou telefone..."
@@ -163,7 +177,10 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
               ))}
             </SelectContent>
           </Select>
+        </div>
 
+        {/* Filtros de Preferências */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
           <Select value={selectedPreferenceFilter} onValueChange={setSelectedPreferenceFilter}>
             <SelectTrigger>
               <SelectValue>
@@ -173,8 +190,36 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas Preferências</SelectItem>
-              <SelectItem value="with_preferences">Com Preferências (Hot Leads)</SelectItem>
-              <SelectItem value="without_preferences">Sem Preferências</SelectItem>
+              <SelectItem value="with_preferences">🔥 Com Preferências (Hot Leads)</SelectItem>
+              <SelectItem value="without_preferences">⏳ Sem Preferências</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedDayFilter} onValueChange={setSelectedDayFilter}>
+            <SelectTrigger>
+              <SelectValue>
+                {selectedDayFilter === 'all' ? 'Todos os Dias' : selectedDayFilter}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Dias</SelectItem>
+              {uniqueDays.map(day => (
+                <SelectItem key={day} value={day}>📅 {day}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedTimeFilter} onValueChange={setSelectedTimeFilter}>
+            <SelectTrigger>
+              <SelectValue>
+                {selectedTimeFilter === 'all' ? 'Todos os Horários' : selectedTimeFilter}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Horários</SelectItem>
+              {uniqueTimes.map(time => (
+                <SelectItem key={time} value={time}>🕐 {time}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
