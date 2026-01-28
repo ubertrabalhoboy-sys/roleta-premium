@@ -20,6 +20,7 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
   const [showLeadDetails, setShowLeadDetails] = useState(false);
   const [selectedLeadForDetails, setSelectedLeadForDetails] = useState(null);
   const [viewMode, setViewMode] = useState('table');
+  const [selectedLeads, setSelectedLeads] = useState([]);
 
   const uniquePrizes = useMemo(() => {
     const prizes = [...new Set(leads.map(l => l.prize).filter(Boolean))];
@@ -113,6 +114,61 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
     });
 
     alert(`Notificação de remarketing enviada para ${restaurant.name}!`);
+  };
+
+  const handleSendBulkRemarketing = async () => {
+    if (selectedLeads.length === 0) {
+      alert('Selecione pelo menos um lead');
+      return;
+    }
+
+    const confirmed = confirm(`Enviar notificações de remarketing para ${selectedLeads.length} lead(s)?`);
+    if (!confirmed) return;
+
+    for (const leadId of selectedLeads) {
+      const lead = sortedLeads.find(l => l.id === leadId);
+      if (!lead) continue;
+
+      const restaurant = restaurants.find(r => r.id === lead.restaurant_id);
+      if (!restaurant) continue;
+
+      await base44.entities.Notification.create({
+        restaurant_id: restaurant.id,
+        type: 'hot_lead',
+        title: '🔥 Cliente Quente para Remarketing',
+        message: `O cliente ${lead.name} (${lead.phone}) está pronto para uma promoção de remarketing! Produto favorito: ${lead.fav_product || 'não informado'}. Dia preferido: ${lead.day_pref || 'não informado'}.`,
+        priority: 'high',
+        read: false,
+        metadata: {
+          lead_id: lead.id,
+          lead_name: lead.name,
+          lead_phone: lead.phone,
+          lead_prize: lead.prize,
+          remarketing: true
+        }
+      });
+
+      await base44.entities.Lead.update(lead.id, { 
+        remarketing_eligible_date: new Date().toISOString() 
+      });
+    }
+
+    alert(`${selectedLeads.length} notificações de remarketing enviadas!`);
+    setSelectedLeads([]);
+  };
+
+  const toggleLeadSelection = (leadId) => {
+    setSelectedLeads(prev => 
+      prev.includes(leadId) ? prev.filter(id => id !== leadId) : [...prev, leadId]
+    );
+  };
+
+  const selectAllLeads = () => {
+    setSelectedLeads(sortedLeads.map(lead => lead.id));
+  };
+
+  const deselectAllLeads = () => {
+    setSelectedLeads([]);
   };
 
   const getSortIcon = (column) => {
@@ -230,9 +286,31 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
           </Select>
         </div>
 
-        <div className="flex justify-between items-center mb-3">
-          <div className="text-sm text-[#636e72]">
-            Mostrando {sortedLeads.length} de {leads.length} leads
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+          <div className="flex flex-col gap-2">
+            <div className="text-sm text-[#636e72]">
+              Mostrando {sortedLeads.length} de {leads.length} leads
+            </div>
+            {selectedLeads.length > 0 && (
+              <div className="flex gap-2 items-center">
+                <span className="text-sm font-semibold text-[#6c5ce7]">
+                  {selectedLeads.length} selecionado(s)
+                </span>
+                <SoftButton 
+                  variant="primary"
+                  onClick={handleSendBulkRemarketing}
+                  style={{ padding: '5px 15px', fontSize: '0.8rem' }}
+                >
+                  <i className="fas fa-bullhorn mr-2"></i> Enviar Remarketing em Massa
+                </SoftButton>
+                <SoftButton 
+                  onClick={deselectAllLeads}
+                  style={{ padding: '5px 15px', fontSize: '0.8rem' }}
+                >
+                  Desmarcar Todos
+                </SoftButton>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2">
@@ -252,6 +330,12 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
             >
               <LayoutGrid className="w-4 h-4" />
             </SoftButton>
+            <SoftButton 
+              onClick={selectAllLeads}
+              style={{ padding: '8px 12px', fontSize: '0.85rem' }}
+            >
+              Selecionar Todos
+            </SoftButton>
           </div>
         </div>
         
@@ -268,6 +352,14 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
             <table className="w-full border-collapse min-w-[1000px]">
               <thead>
                 <tr>
+                  <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedLeads.length === sortedLeads.length && sortedLeads.length > 0}
+                      onChange={() => selectedLeads.length === sortedLeads.length ? deselectAllLeads() : selectAllLeads()}
+                      className="cursor-pointer"
+                    />
+                  </th>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Restaurante</th>
                   <th 
                     className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5 cursor-pointer hover:text-[#6c5ce7]"
@@ -289,7 +381,15 @@ export default function GlobalLeadsModal({ show, leads = [], restaurants = [], o
               </thead>
               <tbody>
                 {sortedLeads.map((lead, idx) => (
-                  <tr key={idx}>
+                  <tr key={idx} className={selectedLeads.includes(lead.id) ? 'bg-blue-50' : ''}>
+                    <td className="p-4 border-b border-black/5">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedLeads.includes(lead.id)}
+                        onChange={() => toggleLeadSelection(lead.id)}
+                        className="cursor-pointer"
+                      />
+                    </td>
                     <td className="p-4 border-b border-black/5 font-medium text-sm">
                       {getRestName(lead.restaurant_id)}
                     </td>
