@@ -11,6 +11,7 @@ import CRMPreviewTable from '@/components/dashboard/CRMPreviewTable';
 import CRMModal from '@/components/modals/CRMModal';
 import PrizesModal from '@/components/modals/PrizesModal';
 import NewPrizeModal from '@/components/modals/NewPrizeModal';
+import RemarketingModal from '@/components/modals/RemarketingModal';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import MetricsChart from '@/components/charts/MetricsChart';
 import ConversionChart from '@/components/charts/ConversionChart';
@@ -26,6 +27,7 @@ export default function RestaurantDashboard() {
   const [showCRM, setShowCRM] = useState(false);
   const [showPrizes, setShowPrizes] = useState(false);
   const [showNewPrize, setShowNewPrize] = useState(false);
+  const [showRemarketing, setShowRemarketing] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
@@ -234,6 +236,9 @@ export default function RestaurantDashboard() {
             <SoftButton onClick={() => setShowCRM(true)}>
               <i className="fas fa-users mr-2"></i> Clientes CRM
             </SoftButton>
+            <SoftButton onClick={() => setShowRemarketing(true)}>
+              <i className="fas fa-bullhorn mr-2"></i> Remarketing
+            </SoftButton>
             <SoftButton onClick={() => setShowPrizes(true)}>
               <i className="fas fa-gift mr-2"></i> Prêmios
             </SoftButton>
@@ -356,6 +361,11 @@ export default function RestaurantDashboard() {
         show={showNewPrize}
         onSave={(data) => createPrizeMutation.mutate(data)}
         onClose={() => setShowNewPrize(false)} 
+      />
+      <RemarketingModal
+        show={showRemarketing}
+        leads={leads}
+        onClose={() => setShowRemarketing(false)}
       />
       <NotificationCenter 
         show={showNotifications}

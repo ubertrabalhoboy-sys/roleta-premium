@@ -49,18 +49,18 @@
  */
 import ClientRoleta from './pages/ClientRoleta';
 import Home from './pages/Home';
+import LeadsManagement from './pages/LeadsManagement';
 import RestaurantDashboard from './pages/RestaurantDashboard';
 import SuperAdmin from './pages/SuperAdmin';
-import LeadsManagement from './pages/LeadsManagement';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "ClientRoleta": ClientRoleta,
     "Home": Home,
+    "LeadsManagement": LeadsManagement,
     "RestaurantDashboard": RestaurantDashboard,
     "SuperAdmin": SuperAdmin,
-    "LeadsManagement": LeadsManagement,
 }
 
 export const pagesConfig = {
