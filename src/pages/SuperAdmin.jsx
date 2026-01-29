@@ -175,10 +175,10 @@ export default function SuperAdmin() {
       
       return {
         date: format(date, 'dd/MM'),
-        access: totalAccess || Math.floor(Math.random() * 50),
-        spins: totalSpins || Math.floor(Math.random() * 40),
-        leads: totalLeads || Math.floor(Math.random() * 20),
-        conversion_rate: totalAccess > 0 ? (totalLeads / totalAccess) * 100 : (Math.random() * 30 + 10)
+        access: totalAccess,
+        spins: totalSpins,
+        leads: totalLeads,
+        conversion_rate: totalAccess > 0 ? (totalLeads / totalAccess) * 100 : 0
       };
     });
     return last7Days;
@@ -192,10 +192,10 @@ export default function SuperAdmin() {
       
       return {
         date: format(date, 'dd/MM'),
-        access: dayMetric?.access || Math.floor(Math.random() * 20),
-        spins: dayMetric?.spins || Math.floor(Math.random() * 15),
-        leads: dayMetric?.leads || Math.floor(Math.random() * 10),
-        conversion_rate: dayMetric?.conversion_rate || (Math.random() * 30 + 10)
+        access: dayMetric?.access || 0,
+        spins: dayMetric?.spins || 0,
+        leads: dayMetric?.leads || 0,
+        conversion_rate: dayMetric?.conversion_rate || 0
       };
     });
     return last7Days;

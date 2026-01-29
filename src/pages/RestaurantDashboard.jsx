@@ -186,14 +186,14 @@ export default function RestaurantDashboard() {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = subDays(new Date(), 6 - i);
       const dateStr = format(date, 'yyyy-MM-dd');
-      const dayMetric = metrics.find(m => m.date === dateStr);
+      const dayMetric = metrics.find(m => m.date === dateStr && m.restaurant_id === currentRestaurant?.id);
       
       return {
         date: format(date, 'dd/MM'),
-        access: dayMetric?.access || Math.floor(Math.random() * 20),
-        spins: dayMetric?.spins || Math.floor(Math.random() * 15),
-        leads: dayMetric?.leads || Math.floor(Math.random() * 10),
-        conversion_rate: dayMetric?.conversion_rate || (Math.random() * 30 + 10)
+        access: dayMetric?.access || 0,
+        spins: dayMetric?.spins || 0,
+        leads: dayMetric?.leads || 0,
+        conversion_rate: dayMetric?.conversion_rate || 0
       };
     });
     return last7Days;
