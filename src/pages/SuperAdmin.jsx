@@ -112,6 +112,17 @@ export default function SuperAdmin() {
     onSuccess: () => queryClient.invalidateQueries(['all-leads'])
   });
 
+  const deleteAllNotificationsMutation = useMutation({
+    mutationFn: async () => {
+      const allNotifications = await base44.entities.Notification.list();
+      await Promise.all(allNotifications.map(n => base44.entities.Notification.delete(n.id)));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['notifications']);
+      alert('Todas as notificações foram apagadas com sucesso!');
+    }
+  });
+
   const logout = () => {
     sessionStorage.removeItem('userType');
     navigate(createPageUrl('Home'));
@@ -221,6 +232,16 @@ export default function SuperAdmin() {
             </SoftButton>
             <SoftButton variant="export" onClick={exportGlobalReport}>
               <i className="fas fa-file-download mr-2"></i> Relatório Global
+            </SoftButton>
+            <SoftButton 
+              variant="danger" 
+              onClick={() => {
+                if (confirm('Apagar TODAS as notificações do sistema?')) {
+                  deleteAllNotificationsMutation.mutate();
+                }
+              }}
+            >
+              <i className="fas fa-bell-slash mr-2"></i> Limpar Notificações
             </SoftButton>
             <SoftButton variant="danger" onClick={logout}>
               Sair
