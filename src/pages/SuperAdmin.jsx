@@ -354,7 +354,7 @@ export default function SuperAdmin() {
                   const conversion = rest.metrics_access > 0 ? ((restLeads.length / rest.metrics_access) * 100).toFixed(1) : '0';
                   
                   return (
-                    <tr key={rest.id} className="hover:bg-gray-50 cursor-pointer">
+                    <tr key={rest.id} className="hover:bg-gray-50">
                       <td className="p-4 border-b border-black/5 font-medium">{rest.name}</td>
                       <td className="p-4 border-b border-black/5 text-[#636e72]">/r/{rest.slug}</td>
                       <td className="p-4 border-b border-black/5">
@@ -379,14 +379,20 @@ export default function SuperAdmin() {
                       <td className="p-4 border-b border-black/5">
                         <div className="flex gap-2">
                           <SoftButton 
-                            onClick={() => setSelectedRestaurant(rest)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedRestaurant(rest);
+                            }}
                             style={{ padding: '5px 10px' }}
                             title="Ver gráficos"
                           >
                             <i className="fas fa-chart-line"></i>
                           </SoftButton>
                           <SoftButton 
-                            onClick={() => simulateClientView(rest)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              simulateClientView(rest);
+                            }}
                             style={{ padding: '5px 10px' }}
                             title="Visualizar roleta"
                           >
@@ -394,7 +400,10 @@ export default function SuperAdmin() {
                           </SoftButton>
                           <SoftButton 
                             variant={rest.status === 'active' ? 'warning' : 'primary'}
-                            onClick={() => toggleRestaurantMutation.mutate({ id: rest.id, status: rest.status })}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleRestaurantMutation.mutate({ id: rest.id, status: rest.status });
+                            }}
                             style={{ padding: '5px 10px' }}
                             title={rest.status === 'active' ? 'Pausar' : 'Ativar'}
                           >
@@ -402,7 +411,8 @@ export default function SuperAdmin() {
                           </SoftButton>
                           <SoftButton 
                             variant="danger"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               if (confirm('Excluir restaurante?')) {
                                 deleteRestaurantMutation.mutate(rest.id);
                               }
