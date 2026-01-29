@@ -3,12 +3,16 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import SoftCard from '../ui/SoftCard';
 
 export default function ConversionChart({ data }) {
-  if (!data || data.length === 0) {
+  const hasData = data && data.length > 0 && data.some(d => d.conversion_rate > 0);
+  
+  if (!hasData) {
     return (
       <SoftCard>
         <h3 className="font-semibold text-[#2d3436] mb-4">Taxa de Conversão</h3>
-        <div className="text-center py-10 text-[#636e72]">
-          Sem dados para exibir
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+          <i className="fas fa-percentage text-4xl text-[#636e72] opacity-30 mb-3"></i>
+          <p className="text-[#636e72] font-semibold">Sem dados de conversão</p>
+          <p className="text-[#636e72] text-sm mt-1">A taxa aparecerá quando houver acessos e leads</p>
         </div>
       </SoftCard>
     );
