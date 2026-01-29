@@ -1,13 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { format, isToday, parseISO } from 'date-fns';
+import { base44 } from '@/api/base44Client';
 import SoftButton from '../ui/SoftButton';
 import SoftInput from '../ui/SoftInput';
 import SmartRemarketingModal from './SmartRemarketingModal';
 
-export default function RemarketingModal({ show, leads = [], onClose }) {
+export default function RemarketingModal({ show, leads = [], onClose, restaurant }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showSmartRemarketing, setShowSmartRemarketing] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
+  const [sendingLeadId, setSendingLeadId] = useState(null);
 
   const todayRemarketingLeads = useMemo(() => {
     return leads.filter(lead => {
@@ -34,12 +36,41 @@ export default function RemarketingModal({ show, leads = [], onClose }) {
     setShowSmartRemarketing(true);
   };
 
-  const sendWhatsApp = (message) => {
-    if (selectedLead) {
-      const url = `https://wa.me/55${selectedLead.phone}?text=${encodeURIComponent(message)}`;
-      window.open(url, '_blank');
+  const sendWhatsApp = async (message) => {
+    if (!selectedLead || !restaurant?.botplugin_api_token) {
+      alert('Token da API BotPlugin não configurado para este restaurante.');
+      return;
+    }
+
+    setSendingLeadId(selectedLead.id);
+    try {
+      const response = await fetch('https://api.botplugin.com.br/api-public/send-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${restaurant.botplugin_api_token}`
+        },
+        body: JSON.stringify({
+          phone: selectedLead.phone,
+          message: message
+        })
+      });
+
+      if (!response.ok) throw new Error('Falha ao enviar mensagem');
+
+      // Atualizar status do lead para enviado
+      await base44.entities.Lead.update(selectedLead.id, {
+        sent_by_admin: true
+      });
+
+      alert('Mensagem enviada com sucesso via API!');
       setShowSmartRemarketing(false);
       setSelectedLead(null);
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
+      alert('Erro ao enviar mensagem. Verifique o token da API e tente novamente.');
+    } finally {
+      setSendingLeadId(null);
     }
   };
 
@@ -138,9 +169,18 @@ export default function RemarketingModal({ show, leads = [], onClose }) {
                       <SoftButton 
                         variant="whatsapp" 
                         onClick={() => handleSendMessage(lead)}
+                        disabled={sendingLeadId === lead.id}
                         style={{ padding: '5px 15px', fontSize: '0.85rem' }}
                       >
-                        <i className="fas fa-comment-dots mr-1"></i> Enviar Oferta
+                        {sendingLeadId === lead.id ? (
+                          <>
+                            <i className="fas fa-spinner fa-spin mr-1"></i> Enviando...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-comment-dots mr-1"></i> Enviar Oferta
+                          </>
+                        )}
                       </SoftButton>
                     </td>
                   </tr>
@@ -154,6 +194,7 @@ export default function RemarketingModal({ show, leads = [], onClose }) {
       <SmartRemarketingModal 
         show={showSmartRemarketing}
         lead={selectedLead}
+        restaurant={restaurant}
         onSend={sendWhatsApp}
         onClose={() => { 
           setShowSmartRemarketing(false); 

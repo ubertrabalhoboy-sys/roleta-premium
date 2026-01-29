@@ -353,6 +353,7 @@ export default function RestaurantDashboard() {
       <RemarketingModal
         show={showRemarketing}
         leads={leads}
+        restaurant={currentRestaurant}
         onClose={() => setShowRemarketing(false)}
       />
       <NotificationCenter 

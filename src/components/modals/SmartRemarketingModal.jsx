@@ -4,13 +4,14 @@ import SoftButton from '../ui/SoftButton';
 import SoftInput from '../ui/SoftInput';
 import { Loader2 } from 'lucide-react';
 
-export default function SmartRemarketingModal({ show, lead, onSend, onClose }) {
+export default function SmartRemarketingModal({ show, lead, onSend, onClose, restaurant }) {
   const [promotion, setPromotion] = useState('');
   const [productType, setProductType] = useState('');
   const [generatedScripts, setGeneratedScripts] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedScript, setSelectedScript] = useState('');
   const [customMessage, setCustomMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   if (!show) return null;
 
@@ -69,18 +70,22 @@ IMPORTANTE: Cada mensagem deve ter no máximo 4 linhas e incluir emojis apropria
     setCustomMessage(generatedScripts[type]);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!customMessage) {
       alert('Digite ou selecione uma mensagem');
       return;
     }
-    onSend(customMessage);
+    
+    setIsSending(true);
+    await onSend(customMessage);
+    
     // Reset
     setPromotion('');
     setProductType('');
     setGeneratedScripts(null);
     setSelectedScript('');
     setCustomMessage('');
+    setIsSending(false);
   };
 
   return (
@@ -266,10 +271,18 @@ IMPORTANTE: Cada mensagem deve ter no máximo 4 linhas e incluir emojis apropria
               <SoftButton 
                 variant="whatsapp" 
                 onClick={handleSendMessage}
-                disabled={!customMessage}
+                disabled={!customMessage || isSending}
                 className="flex-1"
               >
-                <i className="fab fa-whatsapp mr-2"></i> Enviar WhatsApp
+                {isSending ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i> Enviando...
+                  </>
+                ) : (
+                  <>
+                    <i className="fab fa-whatsapp mr-2"></i> Enviar WhatsApp
+                  </>
+                )}
               </SoftButton>
             </div>
           </div>

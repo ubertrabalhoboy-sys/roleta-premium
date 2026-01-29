@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
 import SoftButton from '../ui/SoftButton';
 import SoftInput from '../ui/SoftInput';
 
@@ -7,10 +8,13 @@ export default function WhatsAppModal({
   clientName, 
   clientPhone,
   favProduct,
+  restaurant,
+  leadId,
   onSend, 
   onClose 
 }) {
   const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     if (show && clientName) {
@@ -21,8 +25,43 @@ export default function WhatsAppModal({
     }
   }, [show, clientName, favProduct]);
 
-  const handleSend = () => {
-    onSend(message);
+  const handleSend = async () => {
+    if (!restaurant?.botplugin_api_token) {
+      alert('Token da API BotPlugin não configurado.');
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const response = await fetch('https://api.botplugin.com.br/api-public/send-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${restaurant.botplugin_api_token}`
+        },
+        body: JSON.stringify({
+          phone: clientPhone,
+          message: message
+        })
+      });
+
+      if (!response.ok) throw new Error('Falha ao enviar mensagem');
+
+      // Atualizar status do lead
+      if (leadId) {
+        await base44.entities.Lead.update(leadId, {
+          sent_by_admin: true
+        });
+      }
+
+      alert('Mensagem enviada com sucesso via API!');
+      onClose();
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
+      alert('Erro ao enviar mensagem. Verifique o token da API e tente novamente.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   if (!show) return null;
@@ -56,11 +95,24 @@ export default function WhatsAppModal({
           }}
         />
         <div className="flex gap-2.5">
-          <SoftButton onClick={onClose} className="flex-1">
+          <SoftButton onClick={onClose} className="flex-1" disabled={isSending}>
             Cancelar
           </SoftButton>
-          <SoftButton variant="whatsapp" onClick={handleSend} className="flex-1">
-            <i className="fab fa-whatsapp mr-2"></i> Enviar
+          <SoftButton 
+            variant="whatsapp" 
+            onClick={handleSend} 
+            className="flex-1"
+            disabled={isSending}
+          >
+            {isSending ? (
+              <>
+                <i className="fas fa-spinner fa-spin mr-2"></i> Enviando...
+              </>
+            ) : (
+              <>
+                <i className="fab fa-whatsapp mr-2"></i> Enviar
+              </>
+            )}
           </SoftButton>
         </div>
       </div>

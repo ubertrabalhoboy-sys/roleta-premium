@@ -136,17 +136,8 @@ export default function SuperAdmin() {
 
   const handleSendCoupon = (lead) => {
     setSelectedLead(lead);
+    setSelectedRestaurant(restaurants.find(r => r.id === lead.restaurant_id));
     setShowWhatsApp(true);
-  };
-
-  const sendWhatsApp = (message) => {
-    if (selectedLead) {
-      const url = `https://wa.me/55${selectedLead.phone}?text=${encodeURIComponent(message)}`;
-      window.open(url, '_blank');
-      updateLeadMutation.mutate({ id: selectedLead.id, data: { sent_by_admin: true } });
-      setShowWhatsApp(false);
-      setSelectedLead(null);
-    }
   };
 
   const exportGlobalReport = () => {
@@ -495,8 +486,13 @@ export default function SuperAdmin() {
         clientName={selectedLead?.name}
         clientPhone={selectedLead?.phone}
         favProduct={selectedLead?.fav_product}
-        onSend={sendWhatsApp}
-        onClose={() => { setShowWhatsApp(false); setSelectedLead(null); }} 
+        restaurant={selectedRestaurant}
+        leadId={selectedLead?.id}
+        onClose={() => { 
+          setShowWhatsApp(false); 
+          setSelectedLead(null);
+          setSelectedRestaurant(null);
+        }} 
       />
 
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
