@@ -160,10 +160,11 @@ export default function RestaurantDashboard() {
 
   if (!currentRestaurant) return null;
 
+  // Calcular métricas totais a partir dos dados diários
   const metricsData = {
-    access: currentRestaurant.metrics_access || 0,
-    spins: currentRestaurant.metrics_spins || 0,
-    leads: leads.length
+    access: metrics.reduce((sum, m) => sum + (m.access || 0), 0),
+    spins: metrics.reduce((sum, m) => sum + (m.spins || 0), 0),
+    leads: metrics.reduce((sum, m) => sum + (m.leads || 0), 0)
   };
 
   const conversion = metricsData.access > 0 ? ((metricsData.leads / metricsData.access) * 100).toFixed(1) : '0';
@@ -305,7 +306,7 @@ export default function RestaurantDashboard() {
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               <MetricsChart data={chartData} title="Acessos, Giros e Leads" type={chartType} />
-              <ConversionChart data={chartData} />
+              <ConversionChart data={chartData} type={chartType} />
             </div>
           </div>
 

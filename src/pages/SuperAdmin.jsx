@@ -281,6 +281,7 @@ export default function SuperAdmin() {
             />
             <ConversionChart 
               data={selectedRestaurant ? generateRestaurantChartData(selectedRestaurant.id) : globalChartData}
+              type={chartType}
             />
           </div>
         </div>

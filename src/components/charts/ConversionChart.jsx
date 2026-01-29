@@ -1,8 +1,8 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import SoftCard from '../ui/SoftCard';
 
-export default function ConversionChart({ data }) {
+export default function ConversionChart({ data, type = 'line' }) {
   const hasData = data && data.length > 0 && data.some(d => d.conversion_rate > 0);
   
   if (!hasData) {
@@ -18,11 +18,14 @@ export default function ConversionChart({ data }) {
     );
   }
 
+  const ChartComponent = type === 'area' ? AreaChart : type === 'bar' ? BarChart : LineChart;
+  const SeriesComponent = type === 'area' ? Area : type === 'bar' ? Bar : Line;
+
   return (
     <SoftCard>
       <h3 className="font-semibold text-[#2d3436] mb-4">Taxa de Conversão (%)</h3>
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data}>
+        <ChartComponent data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
           <XAxis 
             dataKey="date" 
@@ -43,15 +46,24 @@ export default function ConversionChart({ data }) {
             }}
             formatter={(value) => `${value.toFixed(1)}%`}
           />
-          <Line 
+          <SeriesComponent 
             type="monotone" 
             dataKey="conversion_rate" 
-            stroke="#e17055" 
+            stroke="#e17055"
+            fill={type === 'area' ? 'url(#colorConversion)' : '#e17055'}
             strokeWidth={3}
             name="Conversão"
-            dot={{ fill: '#e17055', r: 4 }}
+            dot={type !== 'bar' ? { fill: '#e17055', r: 4 } : undefined}
           />
-        </LineChart>
+          {type === 'area' && (
+            <defs>
+              <linearGradient id="colorConversion" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#e17055" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#e17055" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+          )}
+        </ChartComponent>
       </ResponsiveContainer>
     </SoftCard>
   );
