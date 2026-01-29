@@ -8,18 +8,20 @@ export default function NewRestaurantModal({ show, onSave, onClose }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [color, setColor] = useState('#6c5ce7');
+  const [apiToken, setApiToken] = useState('');
 
   const handleSave = () => {
     if (!name || !slug || !email || !password) {
-      alert('Preencha todos os campos');
+      alert('Preencha todos os campos obrigatórios');
       return;
     }
-    onSave({ name, slug, email, password, color });
+    onSave({ name, slug, email, password, color, apiToken });
     setName('');
     setSlug('');
     setEmail('');
     setPassword('');
     setColor('#6c5ce7');
+    setApiToken('');
   };
 
   if (!show) return null;
@@ -58,6 +60,12 @@ export default function NewRestaurantModal({ show, onSave, onClose }) {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+        />
+        <SoftInput
+          placeholder="Token API BotPlugin (opcional)"
+          type="text"
+          value={apiToken}
+          onChange={(e) => setApiToken(e.target.value)}
         />
         <input
           type="color"
