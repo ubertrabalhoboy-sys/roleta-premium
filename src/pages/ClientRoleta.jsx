@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPageUrl } from '@/utils';
+import { format } from 'date-fns';
 import WheelCanvas from '@/components/wheel/WheelCanvas';
 import FairyContainer from '@/components/wheel/FairyContainer';
 import BalloonOverlay from '@/components/wheel/BalloonOverlay';
@@ -97,7 +98,7 @@ export default function ClientRoleta() {
     }
   };
 
-  const handleSpin = () => {
+  const handleSpin = async () => {
     if (isSpinning || hasSpun || prizes.length === 0) return;
     
     setIsSpinning(true);
@@ -108,6 +109,28 @@ export default function ClientRoleta() {
         id: restaurant.id,
         data: { metrics_spins: (restaurant.metrics_spins || 0) + 1 }
       });
+      
+      // Update daily metric
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const existingMetrics = await base44.entities.Metric.filter({ 
+        restaurant_id: restaurant.id, 
+        date: today 
+      });
+      
+      if (existingMetrics.length > 0) {
+        await base44.entities.Metric.update(existingMetrics[0].id, {
+          spins: (existingMetrics[0].spins || 0) + 1
+        });
+      } else {
+        await base44.entities.Metric.create({
+          restaurant_id: restaurant.id,
+          date: today,
+          access: 0,
+          spins: 1,
+          leads: 0,
+          conversion_rate: 0
+        });
+      }
     }
     
     wheelRef.current?.spin();
@@ -170,10 +193,29 @@ export default function ClientRoleta() {
     
     // Update metrics
     if (restaurant) {
+      const newLeadsCount = (restaurant.metrics_leads || 0) + 1;
+      const totalAccess = restaurant.metrics_access || 0;
+      
       updateRestaurantMutation.mutate({
         id: restaurant.id,
-        data: { metrics_leads: (restaurant.metrics_leads || 0) + 1 }
+        data: { metrics_leads: newLeadsCount }
       });
+      
+      // Update daily metric
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const existingMetrics = await base44.entities.Metric.filter({ 
+        restaurant_id: restaurant.id, 
+        date: today 
+      });
+      
+      if (existingMetrics.length > 0) {
+        const updatedLeads = (existingMetrics[0].leads || 0) + 1;
+        const updatedAccess = existingMetrics[0].access || 0;
+        await base44.entities.Metric.update(existingMetrics[0].id, {
+          leads: updatedLeads,
+          conversion_rate: updatedAccess > 0 ? (updatedLeads / updatedAccess) * 100 : 0
+        });
+      }
     }
     
     // Mark as spun
@@ -189,12 +231,38 @@ export default function ClientRoleta() {
 
   // Update access metrics on load
   useEffect(() => {
-    if (restaurant && !hasSpun) {
-      updateRestaurantMutation.mutate({
-        id: restaurant.id,
-        data: { metrics_access: (restaurant.metrics_access || 0) + 1 }
-      });
-    }
+    const trackAccess = async () => {
+      if (restaurant && !hasSpun) {
+        updateRestaurantMutation.mutate({
+          id: restaurant.id,
+          data: { metrics_access: (restaurant.metrics_access || 0) + 1 }
+        });
+        
+        // Update daily metric
+        const today = format(new Date(), 'yyyy-MM-dd');
+        const existingMetrics = await base44.entities.Metric.filter({ 
+          restaurant_id: restaurant.id, 
+          date: today 
+        });
+        
+        if (existingMetrics.length > 0) {
+          await base44.entities.Metric.update(existingMetrics[0].id, {
+            access: (existingMetrics[0].access || 0) + 1
+          });
+        } else {
+          await base44.entities.Metric.create({
+            restaurant_id: restaurant.id,
+            date: today,
+            access: 1,
+            spins: 0,
+            leads: 0,
+            conversion_rate: 0
+          });
+        }
+      }
+    };
+    
+    trackAccess();
   }, [restaurant?.id]);
 
   if (!restaurant) return null;
