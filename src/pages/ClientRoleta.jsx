@@ -289,6 +289,7 @@ export default function ClientRoleta() {
       <div className="absolute top-5 left-5 z-20">
         <SoftButton 
           onClick={exitSimulation}
+          className="botao-vibecodes-glass"
           style={{ 
             fontSize: '0.8rem', 
             opacity: 0.8, 
@@ -376,7 +377,7 @@ export default function ClientRoleta() {
           <button
             onClick={handleSpin}
             disabled={isSpinning || prizes.length === 0}
-            className="mt-8 w-full py-4 text-white uppercase tracking-[4px] text-xl font-bold relative overflow-hidden"
+            className="mt-8 w-full py-4 text-white uppercase tracking-[4px] text-xl font-bold relative overflow-hidden botao-vibecodes-glass"
             style={{
               fontFamily: "'Rajdhani', sans-serif",
               background: 'transparent',
@@ -415,6 +416,79 @@ export default function ClientRoleta() {
         @keyframes flicker { 
           0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; } 
           20%, 24%, 55% { opacity: 0.4; } 
+        }
+
+        @keyframes glass-shine {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 0.8; }
+        }
+
+        /* Glassmorphism Mobile-First Effect */
+        .botao-vibecodes-glass {
+          position: relative;
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2) !important;
+          box-shadow: 
+            0 4px 15px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+          transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+          padding: 14px 24px;
+        }
+
+        .botao-vibecodes-glass::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.2),
+            transparent
+          );
+          transition: left 0.5s;
+          mix-blend-mode: overlay;
+          pointer-events: none;
+          animation: glass-shine 3s ease-in-out infinite;
+        }
+
+        /* Mobile: Active state (touch) */
+        .botao-vibecodes-glass:active:not(:disabled) {
+          transform: scale(0.97);
+          box-shadow: 
+            0 2px 8px rgba(0, 0, 0, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+        }
+
+        /* Desktop: Hover only for devices that support hover */
+        @media (hover: hover) and (pointer: fine) {
+          .botao-vibecodes-glass:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 
+              0 8px 25px rgba(0, 0, 0, 0.15),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+            filter: saturate(1.1) brightness(1.05);
+          }
+
+          .botao-vibecodes-glass:hover:not(:disabled)::before {
+            left: 100%;
+          }
+        }
+
+        /* Disabled state */
+        .botao-vibecodes-glass:disabled {
+          cursor: not-allowed;
+          filter: grayscale(0.3);
+        }
+
+        /* Graceful degradation for browsers without backdrop-filter */
+        @supports not (backdrop-filter: blur(10px)) {
+          .botao-vibecodes-glass {
+            background: rgba(255, 255, 255, 0.05);
+          }
         }
       `}</style>
 
