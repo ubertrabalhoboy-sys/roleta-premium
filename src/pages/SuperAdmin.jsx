@@ -64,6 +64,7 @@ export default function SuperAdmin() {
         name: data.name,
         slug: data.slug,
         owner_email: data.email,
+        password: data.password,
         color: data.color,
         status: 'active',
         metrics_access: 0,

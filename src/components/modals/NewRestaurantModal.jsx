@@ -6,17 +6,19 @@ export default function NewRestaurantModal({ show, onSave, onClose }) {
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [color, setColor] = useState('#6c5ce7');
 
   const handleSave = () => {
-    if (!name || !slug || !email) {
+    if (!name || !slug || !email || !password) {
       alert('Preencha todos os campos');
       return;
     }
-    onSave({ name, slug, email, color });
+    onSave({ name, slug, email, password, color });
     setName('');
     setSlug('');
     setEmail('');
+    setPassword('');
     setColor('#6c5ce7');
   };
 
@@ -50,6 +52,12 @@ export default function NewRestaurantModal({ show, onSave, onClose }) {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+        />
+        <SoftInput
+          placeholder="Senha"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
         <input
           type="color"

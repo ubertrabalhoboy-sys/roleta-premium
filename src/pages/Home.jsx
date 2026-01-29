@@ -26,13 +26,25 @@ export default function Home() {
       sessionStorage.removeItem('currentRestaurant');
       navigate(createPageUrl('SuperAdmin'));
     } else {
-      if (restaurants.length > 0) {
-        sessionStorage.setItem('userType', 'restaurant');
-        sessionStorage.setItem('currentRestaurant', JSON.stringify(restaurants[0]));
-        navigate(createPageUrl('RestaurantDashboard'));
-      } else {
-        alert('Nenhum restaurante cadastrado.');
+      // Buscar restaurante pelo email
+      const restaurant = restaurants.find(r => r.owner_email === email);
+      
+      if (!restaurant) {
+        alert('Restaurante não encontrado com este email.');
+        return;
       }
+      
+      // Validar senha (se não tiver senha definida, usar padrão "123456")
+      const correctPassword = restaurant.password || '123456';
+      
+      if (password !== correctPassword) {
+        alert('Senha incorreta.');
+        return;
+      }
+      
+      sessionStorage.setItem('userType', 'restaurant');
+      sessionStorage.setItem('currentRestaurant', JSON.stringify(restaurant));
+      navigate(createPageUrl('RestaurantDashboard'));
     }
   };
 
