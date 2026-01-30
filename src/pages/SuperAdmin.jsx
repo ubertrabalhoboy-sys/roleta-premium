@@ -66,7 +66,6 @@ export default function SuperAdmin() {
         owner_email: data.email,
         password: data.password,
         color: data.color,
-        botplugin_api_token: data.apiToken || '',
         status: 'active',
         metrics_access: 0,
         metrics_spins: 0,
@@ -356,7 +355,6 @@ export default function SuperAdmin() {
                 <tr>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Restaurante</th>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Link</th>
-                  <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">API Token</th>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Webhook Resgate</th>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Métricas</th>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Status</th>
@@ -372,20 +370,6 @@ export default function SuperAdmin() {
                     <tr key={rest.id} className="hover:bg-gray-50">
                       <td className="p-4 border-b border-black/5 font-medium">{rest.name}</td>
                       <td className="p-4 border-b border-black/5 text-[#636e72]">/r/{rest.slug}</td>
-                      <td className="p-4 border-b border-black/5">
-                        <input
-                          type="text"
-                          placeholder="Cole o token aqui"
-                          value={rest.botplugin_api_token || ''}
-                          onChange={(e) => {
-                            const newToken = e.target.value;
-                            base44.entities.Restaurant.update(rest.id, { botplugin_api_token: newToken })
-                              .then(() => queryClient.invalidateQueries(['restaurants']));
-                          }}
-                          className="w-full px-2 py-1 text-xs rounded border border-gray-300 focus:border-[#6c5ce7] focus:outline-none"
-                          style={{ maxWidth: '200px' }}
-                        />
-                      </td>
                       <td className="p-4 border-b border-black/5">
                         <input
                           type="text"

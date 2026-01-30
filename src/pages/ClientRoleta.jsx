@@ -40,7 +40,7 @@ export default function ClientRoleta() {
           
           // Check if already spun
           const spunKey = `hasSpun_${rest.id}`;
-          if (sessionStorage.getItem(spunKey)) {
+          if (localStorage.getItem(spunKey)) {
             setHasSpun(true);
           }
         } else {
@@ -59,7 +59,7 @@ export default function ClientRoleta() {
       
       // Check if already spun
       const spunKey = `hasSpun_${rest.id}`;
-      if (sessionStorage.getItem(spunKey)) {
+      if (localStorage.getItem(spunKey)) {
         setHasSpun(true);
       }
     }
@@ -81,10 +81,6 @@ export default function ClientRoleta() {
     onSuccess: () => queryClient.invalidateQueries(['leads'])
   });
 
-  const updateRestaurantMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Restaurant.update(id, data)
-  });
-
   const exitSimulation = () => {
     const userType = sessionStorage.getItem('userType');
     sessionStorage.removeItem('simulatedRestaurant');
@@ -102,37 +98,6 @@ export default function ClientRoleta() {
     if (isSpinning || hasSpun || prizes.length === 0) return;
     
     setIsSpinning(true);
-    
-    // Update metrics
-    if (restaurant) {
-      updateRestaurantMutation.mutate({
-        id: restaurant.id,
-        data: { metrics_spins: (restaurant.metrics_spins || 0) + 1 }
-      });
-      
-      // Update daily metric
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const existingMetrics = await base44.entities.Metric.filter({ 
-        restaurant_id: restaurant.id, 
-        date: today 
-      });
-      
-      if (existingMetrics.length > 0) {
-        await base44.entities.Metric.update(existingMetrics[0].id, {
-          spins: (existingMetrics[0].spins || 0) + 1
-        });
-      } else {
-        await base44.entities.Metric.create({
-          restaurant_id: restaurant.id,
-          date: today,
-          access: 0,
-          spins: 1,
-          leads: 0,
-          conversion_rate: 0
-        });
-      }
-    }
-    
     wheelRef.current?.spin();
   };
 
@@ -141,10 +106,11 @@ export default function ClientRoleta() {
     setWonPrize(prize);
     setShowBalloons(true);
     
-    // Update prize count
-    if (prize.id) {
-      await base44.entities.Prize.update(prize.id, {
-        current_count: (prize.current_count || 0) + 1
+    // Track spin via backend function
+    if (restaurant && prize?.id) {
+      await base44.functions.TrackRestaurantSpin({ 
+        restaurantId: restaurant.id, 
+        prizeId: prize.id 
       });
     }
     
@@ -185,7 +151,7 @@ export default function ClientRoleta() {
     }
 
     // Mark as spun
-    sessionStorage.setItem(`hasSpun_${restaurant?.id}`, 'true');
+    localStorage.setItem(`hasSpun_${restaurant?.id}`, 'true');
     setHasSpun(true);
     setShowLeadStep2(false);
   };
@@ -194,37 +160,12 @@ export default function ClientRoleta() {
   useEffect(() => {
     const trackAccess = async () => {
       if (restaurant && !hasSpun) {
-        updateRestaurantMutation.mutate({
-          id: restaurant.id,
-          data: { metrics_access: (restaurant.metrics_access || 0) + 1 }
-        });
-        
-        // Update daily metric
-        const today = format(new Date(), 'yyyy-MM-dd');
-        const existingMetrics = await base44.entities.Metric.filter({ 
-          restaurant_id: restaurant.id, 
-          date: today 
-        });
-        
-        if (existingMetrics.length > 0) {
-          await base44.entities.Metric.update(existingMetrics[0].id, {
-            access: (existingMetrics[0].access || 0) + 1
-          });
-        } else {
-          await base44.entities.Metric.create({
-            restaurant_id: restaurant.id,
-            date: today,
-            access: 1,
-            spins: 0,
-            leads: 0,
-            conversion_rate: 0
-          });
-        }
+        await base44.functions.TrackRestaurantAccess({ restaurantId: restaurant.id });
       }
     };
     
     trackAccess();
-  }, [restaurant?.id]);
+  }, [restaurant?.id, hasSpun]);
 
   if (!restaurant) return null;
 

@@ -8,20 +8,18 @@ export default function NewRestaurantModal({ show, onSave, onClose }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [color, setColor] = useState('#6c5ce7');
-  const [apiToken, setApiToken] = useState('');
 
   const handleSave = () => {
     if (!name || !slug || !email || !password) {
       alert('Preencha todos os campos obrigatórios');
       return;
     }
-    onSave({ name, slug, email, password, color, apiToken });
+    onSave({ name, slug, email, password, color });
     setName('');
     setSlug('');
     setEmail('');
     setPassword('');
     setColor('#6c5ce7');
-    setApiToken('');
   };
 
   if (!show) return null;
