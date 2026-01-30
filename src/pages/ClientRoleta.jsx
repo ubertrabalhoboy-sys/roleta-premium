@@ -131,7 +131,7 @@ export default function ClientRoleta() {
   const handleLeadStep2 = async (data) => {
     // 1. Processar o lead e enviar para webhook Fiqon PRIMEIRO
     try {
-      await base44.functions.ProcessLeadSubmission({
+      await base44.functions.invoke('ProcessLeadSubmission', {
         restaurantId: restaurant.id,
         name: tempLeadData.name,
         phone: tempLeadData.phone,
