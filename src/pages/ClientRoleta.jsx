@@ -76,10 +76,7 @@ export default function ClientRoleta() {
     queryFn: () => base44.entities.FoodOption.list()
   });
 
-  const createLeadMutation = useMutation({
-    mutationFn: (data) => base44.entities.Lead.create(data),
-    onSuccess: () => queryClient.invalidateQueries(['leads'])
-  });
+  // Mutations removidas - operações de escrita agora são feitas via backend
 
   const exitSimulation = () => {
     const userType = sessionStorage.getItem('userType');
@@ -105,14 +102,6 @@ export default function ClientRoleta() {
     setIsSpinning(false);
     setWonPrize(prize);
     setShowBalloons(true);
-    
-    // Track spin via backend function
-    if (restaurant && prize?.id) {
-      await base44.functions.TrackRestaurantSpin({ 
-        restaurantId: restaurant.id, 
-        prizeId: prize.id 
-      });
-    }
     
     setTimeout(() => {
       setShowBalloons(false);
@@ -156,16 +145,7 @@ export default function ClientRoleta() {
     setShowLeadStep2(false);
   };
 
-  // Update access metrics on load
-  useEffect(() => {
-    const trackAccess = async () => {
-      if (restaurant && !hasSpun) {
-        await base44.functions.TrackRestaurantAccess({ restaurantId: restaurant.id });
-      }
-    };
-    
-    trackAccess();
-  }, [restaurant?.id, hasSpun]);
+  // Access tracking será implementado via backend functions quando disponível
 
   if (!restaurant) return null;
 
