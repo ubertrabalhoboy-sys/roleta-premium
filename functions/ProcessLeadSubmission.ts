@@ -16,7 +16,38 @@ export default async function ProcessLeadSubmission({ restaurantId, name, phone,
     // 2. Buscar o restaurante
     const restaurant = await base44.entities.Restaurant.get(restaurantId);
 
-    // 3. Criar notificação de hot lead se todos os dados foram preenchidos
+    // 3. Enviar dados para o webhook Fiqon (se configurado)
+    if (restaurant.webhook_url) {
+      try {
+        const webhookPayload = {
+          lead_id: lead.id,
+          restaurant_id: restaurantId,
+          restaurant_name: restaurant.name,
+          name: name,
+          phone: phone,
+          prize: prize,
+          day_pref: dayPref,
+          time_pref: timePref,
+          fav_product: favProduct,
+          timestamp: new Date().toISOString()
+        };
+
+        await fetch(restaurant.webhook_url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(webhookPayload)
+        });
+
+        await base44.entities.Lead.update(lead.id, { coupon_status: 'sent' });
+      } catch (error) {
+        console.error('Erro ao enviar para webhook Fiqon:', error);
+        await base44.entities.Lead.update(lead.id, { coupon_status: 'failed' });
+      }
+    }
+
+    // 4. Criar notificação de hot lead se todos os dados foram preenchidos
     if (dayPref && timePref && favProduct) {
       await base44.entities.Notification.create({
         restaurant_id: restaurantId,
@@ -32,12 +63,12 @@ export default async function ProcessLeadSubmission({ restaurantId, name, phone,
       });
     }
 
-    // 4. Atualizar métricas do restaurante
+    // 5. Atualizar métricas do restaurante
     await base44.entities.Restaurant.update(restaurantId, {
       metrics_leads: (restaurant.metrics_leads || 0) + 1
     });
 
-    // 5. Atualizar métricas diárias
+    // 6. Atualizar métricas diárias
     const today = new Date().toISOString().split('T')[0]; // yyyy-MM-dd
     const existingMetrics = await base44.entities.Metric.filter({ 
       restaurant_id: restaurantId, 

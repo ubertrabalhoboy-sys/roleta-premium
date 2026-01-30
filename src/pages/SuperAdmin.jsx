@@ -355,6 +355,7 @@ export default function SuperAdmin() {
                 <tr>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Restaurante</th>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Link</th>
+                  <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Webhook Fiqon</th>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Métricas</th>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Status</th>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Ações</th>
@@ -369,6 +370,19 @@ export default function SuperAdmin() {
                     <tr key={rest.id} className="hover:bg-gray-50">
                       <td className="p-4 border-b border-black/5 font-medium">{rest.name}</td>
                       <td className="p-4 border-b border-black/5 text-[#636e72]">/r/{rest.slug}</td>
+                      <td className="p-4 border-b border-black/5">
+                        <input
+                          type="text"
+                          placeholder="URL do webhook Fiqon"
+                          value={rest.webhook_url || ''}
+                          onChange={(e) => {
+                            base44.entities.Restaurant.update(rest.id, { webhook_url: e.target.value })
+                              .then(() => queryClient.invalidateQueries(['restaurants']));
+                          }}
+                          className="w-full px-2 py-1 text-xs rounded border border-gray-300 focus:border-[#6c5ce7] focus:outline-none"
+                          style={{ maxWidth: '250px' }}
+                        />
+                      </td>
                       <td className="p-4 border-b border-black/5">
                         <div className="text-xs space-y-0.5">
                           <div>👁️ {rest.metrics_access || 0} acessos</div>
