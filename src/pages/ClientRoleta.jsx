@@ -159,21 +159,27 @@ export default function ClientRoleta() {
     setTempLeadData(data);
     
     // Enviar dados para webhook
+    const webhookData = {
+      name: data.name,
+      phone: data.phone,
+      prize: wonPrize?.name,
+      restaurant_id: restaurant?.id,
+      restaurant_name: restaurant?.name,
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log('Enviando para webhook:', webhookData);
+    
     try {
-      await fetch('https://webhook.fiqon.app/webhook/a0f4cd0b-aeff-48f5-b84c-ad7ba060ca34/35a202e4-f3e3-411f-8fcf-da5c151f9a24', {
+      const response = await fetch('https://webhook.fiqon.app/webhook/a0f4cd0b-aeff-48f5-b84c-ad7ba060ca34/35a202e4-f3e3-411f-8fcf-da5c151f9a24', {
         method: 'POST',
+        mode: 'no-cors',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          name: data.name,
-          phone: data.phone,
-          prize: wonPrize?.name,
-          restaurant_id: restaurant?.id,
-          restaurant_name: restaurant?.name,
-          timestamp: new Date().toISOString()
-        })
+        body: JSON.stringify(webhookData)
       });
+      console.log('Webhook enviado com sucesso');
     } catch (error) {
       console.error('Erro ao enviar dados para webhook:', error);
     }
