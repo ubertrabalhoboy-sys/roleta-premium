@@ -162,6 +162,12 @@ export default function ClientRoleta() {
   };
 
   const handleLeadStep2 = async (data) => {
+    // Abrir WhatsApp IMEDIATAMENTE antes de qualquer operação assíncrona
+    const restPhone = restaurant?.whatsapp || '5511999999999';
+    const msg = `Olá! Acabei de ganhar *${wonPrize?.name}* na roleta! Gostaria de resgatar.`;
+    window.open(`https://wa.me/${restPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+    
+    // Agora sim processar o resto
     const lead = {
       restaurant_id: restaurant?.id,
       name: tempLeadData.name,
@@ -222,11 +228,6 @@ export default function ClientRoleta() {
     sessionStorage.setItem(`hasSpun_${restaurant?.id}`, 'true');
     setHasSpun(true);
     setShowLeadStep2(false);
-    
-    // Open WhatsApp
-    const restPhone = restaurant?.whatsapp || '5511999999999';
-    const msg = `Olá! Acabei de ganhar *${wonPrize?.name}* na roleta! Gostaria de resgatar.`;
-    window.open(`https://wa.me/${restPhone}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   // Update access metrics on load
