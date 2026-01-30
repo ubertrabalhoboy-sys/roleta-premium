@@ -129,12 +129,7 @@ export default function ClientRoleta() {
   };
 
   const handleLeadStep2 = async (data) => {
-    // Abrir WhatsApp IMEDIATAMENTE antes de qualquer operação assíncrona
-    const restPhone = restaurant?.whatsapp || '5511999999999';
-    const msg = `Olá! Acabei de ganhar *${wonPrize?.name}* na roleta! Gostaria de resgatar.`;
-    window.open(`https://wa.me/${restPhone}?text=${encodeURIComponent(msg)}`, '_blank');
-
-    // Chamar Backend Function para processar o lead
+    // 1. Processar o lead e enviar para webhook Fiqon PRIMEIRO
     try {
       await base44.functions.ProcessLeadSubmission({
         restaurantId: restaurant.id,
@@ -146,12 +141,17 @@ export default function ClientRoleta() {
         favProduct: data.favProduct
       });
       
-      console.log('Lead processado com sucesso');
+      console.log('Lead enviado para Fiqon com sucesso');
     } catch (error) {
       console.error('Erro ao processar lead:', error);
     }
 
-    // Mark as spun
+    // 2. Abrir WhatsApp para resgate
+    const restPhone = restaurant?.whatsapp || '5511999999999';
+    const msg = `Olá! Acabei de ganhar *${wonPrize?.name}* na roleta! Gostaria de resgatar.`;
+    window.open(`https://wa.me/${restPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+
+    // 3. Mark as spun
     localStorage.setItem(`hasSpun_${restaurant?.id}`, 'true');
     setHasSpun(true);
     setShowLeadStep2(false);
