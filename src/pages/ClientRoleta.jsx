@@ -167,20 +167,6 @@ export default function ClientRoleta() {
     const msg = `Olá! Acabei de ganhar *${wonPrize?.name}* na roleta! Gostaria de resgatar.`;
     window.open(`https://wa.me/${restPhone}?text=${encodeURIComponent(msg)}`, '_blank');
 
-    // Agora sim processar o resto
-    const lead = {
-      restaurant_id: restaurant?.id,
-      name: tempLeadData.name,
-      phone: tempLeadData.phone,
-      prize: wonPrize?.name,
-      day_pref: data.day,
-      time_pref: data.time,
-      fav_product: data.favProduct,
-      sent_by_admin: false
-    };
-
-    const createdLead = await createLeadMutation.mutateAsync(lead);
-
     // Enviar dados para endpoint intermediário (Cloudflare Worker)
     try {
       const response = await fetch('https://proxy-webhook.zapiguia.workers.dev', {
@@ -196,60 +182,14 @@ export default function ClientRoleta() {
       });
 
       if (response.ok) {
-        await base44.entities.Lead.update(createdLead.id, { coupon_status: 'sent' });
         console.log('Webhook enviado com sucesso via proxy');
       } else {
-        await base44.entities.Lead.update(createdLead.id, { coupon_status: 'failed' });
         console.log('Falha ao enviar webhook via proxy');
       }
     } catch (error) {
       console.error('Erro ao enviar para proxy webhook:', error);
-      await base44.entities.Lead.update(createdLead.id, { coupon_status: 'failed' });
     }
-    
-    // Create hot lead notification
-    if (data.day && data.time && data.favProduct) {
-      await base44.entities.Notification.create({
-        restaurant_id: restaurant?.id,
-        type: 'hot_lead',
-        title: '🔥 Lead Quente Detectado!',
-        message: `${tempLeadData.name} completou todos os dados. Pronto para conversão!`,
-        priority: 'high',
-        metadata: {
-          lead_id: lead.id,
-          lead_name: tempLeadData.name,
-          lead_phone: tempLeadData.phone
-        }
-      });
-    }
-    
-    // Update metrics
-    if (restaurant) {
-      const newLeadsCount = (restaurant.metrics_leads || 0) + 1;
-      const totalAccess = restaurant.metrics_access || 0;
-      
-      updateRestaurantMutation.mutate({
-        id: restaurant.id,
-        data: { metrics_leads: newLeadsCount }
-      });
-      
-      // Update daily metric
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const existingMetrics = await base44.entities.Metric.filter({ 
-        restaurant_id: restaurant.id, 
-        date: today 
-      });
-      
-      if (existingMetrics.length > 0) {
-        const updatedLeads = (existingMetrics[0].leads || 0) + 1;
-        const updatedAccess = existingMetrics[0].access || 0;
-        await base44.entities.Metric.update(existingMetrics[0].id, {
-          leads: updatedLeads,
-          conversion_rate: updatedAccess > 0 ? (updatedLeads / updatedAccess) * 100 : 0
-        });
-      }
-    }
-    
+
     // Mark as spun
     sessionStorage.setItem(`hasSpun_${restaurant?.id}`, 'true');
     setHasSpun(true);
