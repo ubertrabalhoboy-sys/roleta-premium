@@ -208,6 +208,38 @@ export default function ClientRoleta() {
     
     await createLeadMutation.mutateAsync(lead);
     
+    // Enviar dados para webhook individual do restaurante
+    if (restaurant?.webhook_resgate_cupom) {
+      const webhookData = {
+        lead_id: lead.id,
+        name: tempLeadData.name,
+        phone: tempLeadData.phone,
+        prize: wonPrize?.name,
+        day_pref: data.day,
+        time_pref: data.time,
+        fav_product: data.favProduct,
+        restaurant_id: restaurant.id,
+        restaurant_name: restaurant.name,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log('Enviando resgate para webhook:', webhookData);
+      
+      try {
+        await fetch(restaurant.webhook_resgate_cupom, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(webhookData)
+        });
+        console.log('Webhook de resgate enviado com sucesso');
+      } catch (error) {
+        console.error('Erro ao enviar webhook de resgate:', error);
+      }
+    }
+    
     // Create hot lead notification
     if (data.day && data.time && data.favProduct) {
       await base44.entities.Notification.create({

@@ -357,6 +357,7 @@ export default function SuperAdmin() {
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Restaurante</th>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Link</th>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">API Token</th>
+                  <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Webhook Resgate</th>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Métricas</th>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Status</th>
                   <th className="p-4 text-left text-[#636e72] text-xs font-semibold uppercase border-b border-black/5">Ações</th>
@@ -379,6 +380,20 @@ export default function SuperAdmin() {
                           onChange={(e) => {
                             const newToken = e.target.value;
                             base44.entities.Restaurant.update(rest.id, { botplugin_api_token: newToken })
+                              .then(() => queryClient.invalidateQueries(['restaurants']));
+                          }}
+                          className="w-full px-2 py-1 text-xs rounded border border-gray-300 focus:border-[#6c5ce7] focus:outline-none"
+                          style={{ maxWidth: '200px' }}
+                        />
+                      </td>
+                      <td className="p-4 border-b border-black/5">
+                        <input
+                          type="text"
+                          placeholder="URL do webhook"
+                          value={rest.webhook_resgate_cupom || ''}
+                          onChange={(e) => {
+                            const newWebhook = e.target.value;
+                            base44.entities.Restaurant.update(rest.id, { webhook_resgate_cupom: newWebhook })
                               .then(() => queryClient.invalidateQueries(['restaurants']));
                           }}
                           className="w-full px-2 py-1 text-xs rounded border border-gray-300 focus:border-[#6c5ce7] focus:outline-none"
