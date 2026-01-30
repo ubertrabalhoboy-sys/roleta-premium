@@ -155,8 +155,29 @@ export default function ClientRoleta() {
     setShowLeadModal(true);
   };
 
-  const handleLeadStep1 = (data) => {
+  const handleLeadStep1 = async (data) => {
     setTempLeadData(data);
+    
+    // Enviar dados para webhook
+    try {
+      await fetch('https://webhook.fiqon.app/webhook/a0f4cd0b-aeff-48f5-b84c-ad7ba060ca34/35a202e4-f3e3-411f-8fcf-da5c151f9a24', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: data.name,
+          phone: data.phone,
+          prize: wonPrize?.name,
+          restaurant_id: restaurant?.id,
+          restaurant_name: restaurant?.name,
+          timestamp: new Date().toISOString()
+        })
+      });
+    } catch (error) {
+      console.error('Erro ao enviar dados para webhook:', error);
+    }
+    
     setShowLeadModal(false);
     setShowLeadStep2(true);
   };
