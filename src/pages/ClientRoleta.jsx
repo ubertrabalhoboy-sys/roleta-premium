@@ -206,12 +206,12 @@ export default function ClientRoleta() {
       sent_by_admin: false
     };
     
-    await createLeadMutation.mutateAsync(lead);
+    const createdLead = await createLeadMutation.mutateAsync(lead);
     
     // Enviar dados para webhook individual do restaurante
     if (restaurant?.webhook_resgate_cupom) {
       const webhookData = {
-        lead_id: lead.id,
+        lead_id: createdLead.id,
         name: tempLeadData.name,
         phone: tempLeadData.phone,
         prize: wonPrize?.name,
@@ -226,17 +226,26 @@ export default function ClientRoleta() {
       console.log('Enviando resgate para webhook:', webhookData);
       
       try {
-        await fetch(restaurant.webhook_resgate_cupom, {
+        const response = await fetch(restaurant.webhook_resgate_cupom, {
           method: 'POST',
-          mode: 'no-cors',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify(webhookData)
         });
-        console.log('Webhook de resgate enviado com sucesso');
+        
+        if (response.ok) {
+          // Webhook respondeu com sucesso
+          await base44.entities.Lead.update(createdLead.id, { coupon_status: 'sent' });
+          console.log('Webhook de resgate enviado com sucesso - Status atualizado para "sent"');
+        } else {
+          // Webhook retornou erro
+          await base44.entities.Lead.update(createdLead.id, { coupon_status: 'failed' });
+          console.log('Webhook de resgate falhou - Status atualizado para "failed"');
+        }
       } catch (error) {
         console.error('Erro ao enviar webhook de resgate:', error);
+        await base44.entities.Lead.update(createdLead.id, { coupon_status: 'failed' });
       }
     }
     
