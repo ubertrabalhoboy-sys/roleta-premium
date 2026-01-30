@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPageUrl } from '@/utils';
-import { format } from 'date-fns';
 import WheelCanvas from '@/components/wheel/WheelCanvas';
 import FairyContainer from '@/components/wheel/FairyContainer';
 import BalloonOverlay from '@/components/wheel/BalloonOverlay';
@@ -13,10 +11,11 @@ import SoftButton from '@/components/ui/SoftButton';
 
 export default function ClientRoleta() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const wheelRef = useRef(null);
   
   const [restaurant, setRestaurant] = useState(null);
+  const [prizes, setPrizes] = useState([]);
+  const [foodOptions, setFoodOptions] = useState([]);
   const [hasSpun, setHasSpun] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
   const [showBalloons, setShowBalloons] = useState(false);
@@ -28,55 +27,68 @@ export default function ClientRoleta() {
   const [tempLeadData, setTempLeadData] = useState({});
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const slug = urlParams.get('slug');
-    
-    if (slug) {
-      // Buscar restaurante pelo slug
-      base44.entities.Restaurant.filter({ slug: slug }).then(restaurants => {
-        if (restaurants && restaurants.length > 0) {
-          const rest = restaurants[0];
-          setRestaurant(rest);
-          
-          // Check if already spun
-          const spunKey = `hasSpun_${rest.id}`;
-          if (localStorage.getItem(spunKey)) {
-            setHasSpun(true);
+    const loadData = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const slug = urlParams.get('slug');
+      
+      if (slug) {
+        try {
+          const restaurants = await base44.entities.Restaurant.filter({ slug: slug });
+          if (restaurants && restaurants.length > 0) {
+            const rest = restaurants[0];
+            setRestaurant(rest);
+            
+            // Load prizes
+            const restPrizes = await base44.entities.Prize.filter({ restaurant_id: rest.id });
+            setPrizes(restPrizes || []);
+            
+            // Check if already spun
+            const spunKey = `hasSpun_${rest.id}`;
+            if (localStorage.getItem(spunKey)) {
+              setHasSpun(true);
+            }
+          } else {
+            navigate(createPageUrl('Home'));
           }
-        } else {
+        } catch (error) {
+          console.error('Erro ao carregar restaurante:', error);
           navigate(createPageUrl('Home'));
         }
-      });
-    } else {
-      // Fallback para simulação antiga
-      const restData = sessionStorage.getItem('simulatedRestaurant');
-      if (!restData) {
-        navigate(createPageUrl('Home'));
-        return;
+      } else {
+        // Fallback para simulação antiga
+        const restData = sessionStorage.getItem('simulatedRestaurant');
+        if (!restData) {
+          navigate(createPageUrl('Home'));
+          return;
+        }
+        const rest = JSON.parse(restData);
+        setRestaurant(rest);
+        
+        try {
+          const restPrizes = await base44.entities.Prize.filter({ restaurant_id: rest.id });
+          setPrizes(restPrizes || []);
+        } catch (error) {
+          console.error('Erro ao carregar prêmios:', error);
+        }
+        
+        // Check if already spun
+        const spunKey = `hasSpun_${rest.id}`;
+        if (localStorage.getItem(spunKey)) {
+          setHasSpun(true);
+        }
       }
-      const rest = JSON.parse(restData);
-      setRestaurant(rest);
-      
-      // Check if already spun
-      const spunKey = `hasSpun_${rest.id}`;
-      if (localStorage.getItem(spunKey)) {
-        setHasSpun(true);
+
+      // Load food options
+      try {
+        const options = await base44.entities.FoodOption.list();
+        setFoodOptions(options || []);
+      } catch (error) {
+        console.error('Erro ao carregar opções de comida:', error);
       }
-    }
+    };
+
+    loadData();
   }, [navigate]);
-
-  const { data: prizes = [] } = useQuery({
-    queryKey: ['prizes', restaurant?.id],
-    queryFn: () => base44.entities.Prize.filter({ restaurant_id: restaurant?.id }),
-    enabled: !!restaurant?.id
-  });
-
-  const { data: foodOptions = [] } = useQuery({
-    queryKey: ['food-options'],
-    queryFn: () => base44.entities.FoodOption.list()
-  });
-
-  // Mutations removidas - operações de escrita agora são feitas via backend
 
   const exitSimulation = () => {
     const userType = sessionStorage.getItem('userType');
