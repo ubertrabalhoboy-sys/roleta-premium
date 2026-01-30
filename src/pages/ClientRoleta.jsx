@@ -167,27 +167,21 @@ export default function ClientRoleta() {
     const msg = `Olá! Acabei de ganhar *${wonPrize?.name}* na roleta! Gostaria de resgatar.`;
     window.open(`https://wa.me/${restPhone}?text=${encodeURIComponent(msg)}`, '_blank');
 
-    // Enviar dados para endpoint intermediário (Cloudflare Worker)
+    // Chamar Backend Function para processar o lead
     try {
-      const response = await fetch('https://proxy-webhook.zapiguia.workers.dev', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          storeId: restaurant.slug || restaurant.id,
-          nome: tempLeadData.name,
-          telefone: tempLeadData.phone
-        })
+      await base44.functions.ProcessLeadSubmission({
+        restaurantId: restaurant.id,
+        name: tempLeadData.name,
+        phone: tempLeadData.phone,
+        prize: wonPrize?.name,
+        dayPref: data.day,
+        timePref: data.time,
+        favProduct: data.favProduct
       });
-
-      if (response.ok) {
-        console.log('Webhook enviado com sucesso via proxy');
-      } else {
-        console.log('Falha ao enviar webhook via proxy');
-      }
+      
+      console.log('Lead processado com sucesso');
     } catch (error) {
-      console.error('Erro ao enviar para proxy webhook:', error);
+      console.error('Erro ao processar lead:', error);
     }
 
     // Mark as spun
