@@ -1,7 +1,12 @@
-export default async function ProcessLeadSubmission({ restaurantId, name, phone, prize, dayPref, timePref, favProduct }, { base44 }) {
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+
+Deno.serve(async (req) => {
   try {
+    const base44 = createClientFromRequest(req);
+    const { restaurantId, name, phone, prize, dayPref, timePref, favProduct } = await req.json();
+
     // 1. Criar o lead no banco de dados
-    const lead = await base44.entities.Lead.create({
+    const lead = await base44.asServiceRole.entities.Lead.create({
       restaurant_id: restaurantId,
       name: name,
       phone: phone,
@@ -14,7 +19,7 @@ export default async function ProcessLeadSubmission({ restaurantId, name, phone,
     });
 
     // 2. Buscar o restaurante
-    const restaurant = await base44.entities.Restaurant.get(restaurantId);
+    const restaurant = await base44.asServiceRole.entities.Restaurant.get(restaurantId);
 
     // 3. Enviar dados para o webhook Fiqon (se configurado)
     if (restaurant.webhook_url) {
@@ -40,16 +45,16 @@ export default async function ProcessLeadSubmission({ restaurantId, name, phone,
           body: JSON.stringify(webhookPayload)
         });
 
-        await base44.entities.Lead.update(lead.id, { coupon_status: 'sent' });
+        await base44.asServiceRole.entities.Lead.update(lead.id, { coupon_status: 'sent' });
       } catch (error) {
         console.error('Erro ao enviar para webhook Fiqon:', error);
-        await base44.entities.Lead.update(lead.id, { coupon_status: 'failed' });
+        await base44.asServiceRole.entities.Lead.update(lead.id, { coupon_status: 'failed' });
       }
     }
 
     // 4. Criar notificação de hot lead se todos os dados foram preenchidos
     if (dayPref && timePref && favProduct) {
-      await base44.entities.Notification.create({
+      await base44.asServiceRole.entities.Notification.create({
         restaurant_id: restaurantId,
         type: 'hot_lead',
         title: '🔥 Lead Quente Detectado!',
@@ -64,13 +69,13 @@ export default async function ProcessLeadSubmission({ restaurantId, name, phone,
     }
 
     // 5. Atualizar métricas do restaurante
-    await base44.entities.Restaurant.update(restaurantId, {
+    await base44.asServiceRole.entities.Restaurant.update(restaurantId, {
       metrics_leads: (restaurant.metrics_leads || 0) + 1
     });
 
     // 6. Atualizar métricas diárias
-    const today = new Date().toISOString().split('T')[0]; // yyyy-MM-dd
-    const existingMetrics = await base44.entities.Metric.filter({ 
+    const today = new Date().toISOString().split('T')[0];
+    const existingMetrics = await base44.asServiceRole.entities.Metric.filter({ 
       restaurant_id: restaurantId, 
       date: today 
     });
@@ -80,23 +85,23 @@ export default async function ProcessLeadSubmission({ restaurantId, name, phone,
       const updatedLeads = (metric.leads || 0) + 1;
       const totalAccess = metric.access || 0;
       
-      await base44.entities.Metric.update(metric.id, {
+      await base44.asServiceRole.entities.Metric.update(metric.id, {
         leads: updatedLeads,
         conversion_rate: totalAccess > 0 ? (updatedLeads / totalAccess) * 100 : 0
       });
     }
 
-    return {
+    return Response.json({
       success: true,
       leadId: lead.id,
       message: 'Lead processado com sucesso'
-    };
+    });
 
   } catch (error) {
     console.error('Erro ao processar lead:', error);
-    return {
+    return Response.json({
       success: false,
       error: error.message
-    };
+    }, { status: 500 });
   }
-}
+});
