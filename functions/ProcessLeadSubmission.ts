@@ -16,45 +16,7 @@ export default async function ProcessLeadSubmission({ restaurantId, name, phone,
     // 2. Buscar o restaurante
     const restaurant = await base44.entities.Restaurant.get(restaurantId);
 
-    // 3. Enviar para o webhook individual do restaurante (se configurado)
-    if (restaurant.webhook_resgate_cupom) {
-      try {
-        const webhookData = {
-          lead_id: lead.id,
-          name: name,
-          phone: phone,
-          prize: prize,
-          day_pref: dayPref,
-          time_pref: timePref,
-          fav_product: favProduct,
-          restaurant_id: restaurantId,
-          restaurant_name: restaurant.name,
-          timestamp: new Date().toISOString()
-        };
-
-        const response = await fetch(restaurant.webhook_resgate_cupom, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(webhookData)
-        });
-
-        // Atualizar status do cupom baseado na resposta
-        if (response.ok) {
-          await base44.entities.Lead.update(lead.id, { coupon_status: 'sent' });
-        } else {
-          await base44.entities.Lead.update(lead.id, { coupon_status: 'failed' });
-        }
-      } catch (webhookError) {
-        console.error('Erro ao enviar webhook:', webhookError);
-        await base44.entities.Lead.update(lead.id, { coupon_status: 'failed' });
-      }
-    } else {
-      console.log('Webhook não configurado para este restaurante');
-    }
-
-    // 4. Criar notificação de hot lead se todos os dados foram preenchidos
+    // 3. Criar notificação de hot lead se todos os dados foram preenchidos
     if (dayPref && timePref && favProduct) {
       await base44.entities.Notification.create({
         restaurant_id: restaurantId,
@@ -70,12 +32,12 @@ export default async function ProcessLeadSubmission({ restaurantId, name, phone,
       });
     }
 
-    // 5. Atualizar métricas do restaurante
+    // 4. Atualizar métricas do restaurante
     await base44.entities.Restaurant.update(restaurantId, {
       metrics_leads: (restaurant.metrics_leads || 0) + 1
     });
 
-    // 6. Atualizar métricas diárias
+    // 5. Atualizar métricas diárias
     const today = new Date().toISOString().split('T')[0]; // yyyy-MM-dd
     const existingMetrics = await base44.entities.Metric.filter({ 
       restaurant_id: restaurantId, 
