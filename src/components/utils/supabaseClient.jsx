@@ -17,7 +17,14 @@ export const supabaseHelper = {
   // Restaurant operations
   Restaurant: {
     async list() {
-      const { data, error } = await supabase.from('Restaurant').select('*');
+      // Testando ambos os casos (maiúsculo e minúsculo)
+      let { data, error } = await supabase.from('restaurant').select('*');
+      if (error) {
+        // Tentar com R maiúsculo se falhar
+        const retry = await supabase.from('Restaurant').select('*');
+        data = retry.data;
+        error = retry.error;
+      }
       if (error) throw error;
       return data || [];
     },
