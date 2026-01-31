@@ -23,58 +23,62 @@ export default function Home() {
     e.preventDefault();
 
     try {
-      if (email.includes('super')) {
-        if (email === 'super@admin.com' && password === 'admin123') {
-          sessionStorage.setItem('userType', 'super_admin');
-          sessionStorage.removeItem('currentRestaurant');
-          navigate(createPageUrl('SuperAdmin'));
-        } else {
-          alert('Credenciais de Super Admin incorretas.');
-        }
+      // Login do Super Admin com credenciais fixas
+      if (email === 'super@admin.com' && password === 'admin123') {
+        sessionStorage.setItem('userType', 'super_admin');
+        sessionStorage.removeItem('currentRestaurant');
+        navigate(createPageUrl('SuperAdmin'));
         return;
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      // Autenticação padrão usando Supabase Auth
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
 
       if (error) {
-        throw error;
+        alert(`Erro de autenticação: ${error.message}`);
+        return;
       }
 
-      if (data.user) {
-        // Verificação VIP: Super Admin com email específico
-        if (data.user.email === 'rag.alvesg@gmail.com') {
-          sessionStorage.setItem('userType', 'super_admin');
-          sessionStorage.removeItem('currentRestaurant');
-          navigate(createPageUrl('SuperAdmin'));
-          return;
-        }
-
-        // Buscar restaurante usando owner_id (ID do Auth Supabase)
-        const { data: restaurantData, error: restaurantError } = await supabase
-          .from('restaurant')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        console.log('Busca Restaurante:', { 
-          userId: data.user.id, 
-          restaurantData, 
-          restaurantError 
-        });
-
-        if (restaurantData && !restaurantError) {
-          sessionStorage.setItem('userType', 'restaurant');
-          sessionStorage.setItem('currentRestaurant', JSON.stringify(restaurantData));
-          navigate(createPageUrl('RestaurantDashboard'));
-        } else {
-          alert('Usuário autenticado, mas não associado a nenhum restaurante.');
-          await supabase.auth.signOut();
-        }
-      } else {
+      if (!data.user) {
         alert('Não foi possível autenticar o usuário.');
+        return;
+      }
+
+      // Verificação VIP: Super Admin com email específico
+      if (data.user.email === 'rag.alvesg@gmail.com') {
+        sessionStorage.setItem('userType', 'super_admin');
+        sessionStorage.removeItem('currentRestaurant');
+        navigate(createPageUrl('SuperAdmin'));
+        return;
+      }
+
+      // Buscar restaurante (o ID do restaurante é o mesmo do usuário Auth)
+      const { data: restaurantData, error: restaurantError } = await supabase
+        .from('restaurant')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+
+      console.log('🔍 Busca Restaurante:', { 
+        userId: data.user.id,
+        userEmail: data.user.email,
+        restaurantData, 
+        restaurantError 
+      });
+
+      if (restaurantData && !restaurantError) {
+        sessionStorage.setItem('userType', 'restaurant');
+        sessionStorage.setItem('currentRestaurant', JSON.stringify(restaurantData));
+        navigate(createPageUrl('RestaurantDashboard'));
+      } else {
+        alert('Usuário não possui restaurante vinculado. Contate o administrador.');
+        await supabase.auth.signOut();
       }
     } catch (error) {
-      alert(error.message);
+      alert(`Erro: ${error.message}`);
     }
   };
 
