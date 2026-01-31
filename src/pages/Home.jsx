@@ -49,11 +49,22 @@ export default function Home() {
           return;
         }
 
-        const restaurant = restaurants.find(r => r.owner_email === data.user.email);
+        // Buscar restaurante usando owner_id (ID do Auth Supabase)
+        const { data: restaurantData, error: restaurantError } = await supabase
+          .from('restaurant')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
 
-        if (restaurant) {
+        console.log('Busca Restaurante:', { 
+          userId: data.user.id, 
+          restaurantData, 
+          restaurantError 
+        });
+
+        if (restaurantData && !restaurantError) {
           sessionStorage.setItem('userType', 'restaurant');
-          sessionStorage.setItem('currentRestaurant', JSON.stringify(restaurant));
+          sessionStorage.setItem('currentRestaurant', JSON.stringify(restaurantData));
           navigate(createPageUrl('RestaurantDashboard'));
         } else {
           alert('Usuário autenticado, mas não associado a nenhum restaurante.');
