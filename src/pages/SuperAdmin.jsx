@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabaseHelper } from '@/components/utils/supabaseClient';
+import { supabase, supabaseHelper } from '@/components/utils/supabaseClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPageUrl } from '@/utils';
 import { format, subDays } from 'date-fns';
@@ -77,6 +77,9 @@ export default function SuperAdmin() {
     onSuccess: () => {
       queryClient.invalidateQueries(['restaurants']);
       setShowNewRestaurant(false);
+    },
+    onError: (error) => {
+      alert(`Erro ao criar restaurante: ${error.message}`);
     }
   });
 
@@ -84,27 +87,32 @@ export default function SuperAdmin() {
     mutationFn: ({ id, status }) => supabaseHelper.Restaurant.update(id, { 
       status: status === 'active' ? 'paused' : 'active' 
     }),
-    onSuccess: () => queryClient.invalidateQueries(['restaurants'])
+    onSuccess: () => queryClient.invalidateQueries(['restaurants']),
+    onError: (error) => alert(`Erro: ${error.message}`)
   });
 
   const deleteRestaurantMutation = useMutation({
     mutationFn: (id) => supabaseHelper.Restaurant.delete(id),
-    onSuccess: () => queryClient.invalidateQueries(['restaurants'])
+    onSuccess: () => queryClient.invalidateQueries(['restaurants']),
+    onError: (error) => alert(`Erro: ${error.message}`)
   });
 
   const addFoodOptionMutation = useMutation({
     mutationFn: (name) => supabaseHelper.FoodOption.create({ name }),
-    onSuccess: () => queryClient.invalidateQueries(['food-options'])
+    onSuccess: () => queryClient.invalidateQueries(['food-options']),
+    onError: (error) => alert(`Erro: ${error.message}`)
   });
 
   const removeFoodOptionMutation = useMutation({
     mutationFn: (id) => supabaseHelper.FoodOption.delete(id),
-    onSuccess: () => queryClient.invalidateQueries(['food-options'])
+    onSuccess: () => queryClient.invalidateQueries(['food-options']),
+    onError: (error) => alert(`Erro: ${error.message}`)
   });
 
   const updateLeadMutation = useMutation({
     mutationFn: ({ id, data }) => supabaseHelper.Lead.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries(['all-leads'])
+    onSuccess: () => queryClient.invalidateQueries(['all-leads']),
+    onError: (error) => alert(`Erro: ${error.message}`)
   });
 
   const deleteAllNotificationsMutation = useMutation({
@@ -115,11 +123,14 @@ export default function SuperAdmin() {
     onSuccess: () => {
       queryClient.invalidateQueries(['notifications']);
       alert('Todas as notificações foram apagadas com sucesso!');
-    }
+    },
+    onError: (error) => alert(`Erro: ${error.message}`)
   });
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     sessionStorage.removeItem('userType');
+    sessionStorage.removeItem('currentRestaurant');
     navigate(createPageUrl('Home'));
   };
 

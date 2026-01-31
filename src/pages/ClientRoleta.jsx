@@ -131,17 +131,44 @@ export default function ClientRoleta() {
   const handleLeadStep2 = async (data) => {
     // 1. Processar o lead e enviar para webhook Fiqon PRIMEIRO
     try {
-      await base44.functions.invoke('ProcessLeadSubmission', {
-        restaurantId: restaurant.id,
+      const newLead = await supabaseHelper.Lead.create({
+        restaurant_id: restaurant.id,
         name: tempLeadData.name,
         phone: tempLeadData.phone,
         prize: wonPrize?.name,
-        dayPref: data.day,
-        timePref: data.time,
-        favProduct: data.favProduct
+        day_pref: data.day,
+        time_pref: data.time,
+        fav_product: data.favProduct,
+        coupon_status: 'pending',
+        sent_by_admin: false
       });
-      
-      console.log('Lead enviado para Fiqon com sucesso');
+
+      if (restaurant.webhook_url) {
+        await fetch(restaurant.webhook_url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            restaurant_id: restaurant.id,
+            name: tempLeadData.name,
+            phone: tempLeadData.phone,
+            prize: wonPrize?.name,
+            day_pref: data.day,
+            time_pref: data.time,
+            fav_product: data.favProduct
+          })
+        });
+        await supabaseHelper.Lead.update(newLead.id, { coupon_status: 'sent' });
+      }
+
+      const [currentRestaurant] = await supabaseHelper.Restaurant.filter({ id: restaurant.id });
+      if (currentRestaurant) {
+        await supabaseHelper.Restaurant.update(restaurant.id, {
+          metrics_spins: (currentRestaurant.metrics_spins || 0) + 1,
+          metrics_leads: (currentRestaurant.metrics_leads || 0) + 1
+        });
+      }
+
+      console.log('Lead processado com sucesso');
     } catch (error) {
       console.error('Erro ao processar lead:', error);
     }
@@ -157,7 +184,7 @@ export default function ClientRoleta() {
     setShowLeadStep2(false);
   };
 
-  // Access tracking será implementado via backend functions quando disponível
+
 
   if (!restaurant) return null;
 

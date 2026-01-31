@@ -49,7 +49,8 @@ export default function LeadsManagement() {
 
   const updateLeadMutation = useMutation({
     mutationFn: ({ id, data }) => supabaseHelper.Lead.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries(['restaurant-leads'])
+    onSuccess: () => queryClient.invalidateQueries(['restaurant-leads']),
+    onError: (error) => alert(`Erro: ${error.message}`)
   });
 
   const goBack = () => {

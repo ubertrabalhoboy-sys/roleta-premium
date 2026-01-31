@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabaseHelper } from '@/components/utils/supabaseClient';
+import { supabase, supabaseHelper } from '@/components/utils/supabaseClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPageUrl } from '@/utils';
 import { format, subDays } from 'date-fns';
@@ -31,15 +31,27 @@ export default function RestaurantDashboard() {
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
-    const userType = sessionStorage.getItem('userType');
-    const restData = sessionStorage.getItem('currentRestaurant');
-    
-    if (userType !== 'restaurant' || !restData) {
-      navigate(createPageUrl('Login'));
-      return;
-    }
-    
-    setCurrentRestaurant(JSON.parse(restData));
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const restData = sessionStorage.getItem('currentRestaurant');
+
+      if (!user || !restData) {
+        navigate(createPageUrl('Home'));
+        return;
+      }
+      
+      const parsedRestData = JSON.parse(restData);
+      if (user.email !== parsedRestData.owner_email) {
+        alert('Acesso não autorizado.');
+        await supabase.auth.signOut();
+        sessionStorage.clear();
+        navigate(createPageUrl('Home'));
+        return;
+      }
+
+      setCurrentRestaurant(parsedRestData);
+    };
+    checkAuth();
   }, [navigate]);
 
   const { data: leads = [] } = useQuery({
@@ -68,7 +80,8 @@ export default function RestaurantDashboard() {
 
   const deletePrizeMutation = useMutation({
     mutationFn: (id) => supabaseHelper.Prize.delete(id),
-    onSuccess: () => queryClient.invalidateQueries(['prizes'])
+    onSuccess: () => queryClient.invalidateQueries(['prizes']),
+    onError: (error) => alert(`Erro: ${error.message}`)
   });
 
   const createPrizeMutation = useMutation({
@@ -81,23 +94,26 @@ export default function RestaurantDashboard() {
       queryClient.invalidateQueries(['prizes']);
       setShowNewPrize(false);
       setShowPrizes(true);
-    }
+    },
+    onError: (error) => alert(`Erro: ${error.message}`)
   });
 
   const markNotificationReadMutation = useMutation({
     mutationFn: (id) => NotificationService.markAsRead(id),
-    onSuccess: () => queryClient.invalidateQueries(['notifications'])
+    onSuccess: () => queryClient.invalidateQueries(['notifications']),
+    onError: (error) => alert(`Erro: ${error.message}`)
   });
 
   const markAllNotificationsReadMutation = useMutation({
     mutationFn: () => NotificationService.markAllAsRead(currentRestaurant?.id),
-    onSuccess: () => queryClient.invalidateQueries(['notifications'])
+    onSuccess: () => queryClient.invalidateQueries(['notifications']),
+    onError: (error) => alert(`Erro: ${error.message}`)
   });
 
-  const logout = () => {
-    sessionStorage.removeItem('userType');
-    sessionStorage.removeItem('currentRestaurant');
-    navigate(createPageUrl('Login'));
+  const logout = async () => {
+    await supabase.auth.signOut();
+    sessionStorage.clear();
+    navigate(createPageUrl('Home'));
   };
 
   const openWhatsApp = (phone) => {

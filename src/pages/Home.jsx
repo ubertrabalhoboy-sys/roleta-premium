@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabaseHelper } from '@/components/utils/supabaseClient';
+import { supabase, supabaseHelper } from '@/components/utils/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
 import SoftCard from '@/components/ui/SoftCard';
 import SoftButton from '@/components/ui/SoftButton';
@@ -18,33 +18,43 @@ export default function Home() {
     queryFn: () => supabaseHelper.Restaurant.list()
   });
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    
-    if (email.includes('super')) {
-      sessionStorage.setItem('userType', 'super_admin');
-      sessionStorage.removeItem('currentRestaurant');
-      navigate(createPageUrl('SuperAdmin'));
-    } else {
-      // Buscar restaurante pelo email
-      const restaurant = restaurants.find(r => r.owner_email === email);
-      
-      if (!restaurant) {
-        alert('Restaurante não encontrado com este email.');
+
+    try {
+      if (email.includes('super')) {
+        if (email === 'super@admin.com' && password === 'admin123') {
+          sessionStorage.setItem('userType', 'super_admin');
+          sessionStorage.removeItem('currentRestaurant');
+          navigate(createPageUrl('SuperAdmin'));
+        } else {
+          alert('Credenciais de Super Admin incorretas.');
+        }
         return;
       }
-      
-      // Validar senha (se não tiver senha definida, usar padrão "123456")
-      const correctPassword = restaurant.password || '123456';
-      
-      if (password !== correctPassword) {
-        alert('Senha incorreta.');
-        return;
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        throw error;
       }
-      
-      sessionStorage.setItem('userType', 'restaurant');
-      sessionStorage.setItem('currentRestaurant', JSON.stringify(restaurant));
-      navigate(createPageUrl('RestaurantDashboard'));
+
+      if (data.user) {
+        const restaurant = restaurants.find(r => r.owner_email === data.user.email);
+
+        if (restaurant) {
+          sessionStorage.setItem('userType', 'restaurant');
+          sessionStorage.setItem('currentRestaurant', JSON.stringify(restaurant));
+          navigate(createPageUrl('RestaurantDashboard'));
+        } else {
+          alert('Usuário autenticado, mas não associado a nenhum restaurante.');
+          await supabase.auth.signOut();
+        }
+      } else {
+        alert('Não foi possível autenticar o usuário.');
+      }
+    } catch (error) {
+      alert(error.message);
     }
   };
 
