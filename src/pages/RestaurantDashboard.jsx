@@ -72,9 +72,46 @@ export default function RestaurantDashboard() {
     enabled: !!currentRestaurant?.id
   });
 
-  const { data: metrics = [] } = useQuery({
+  const { data: rawMetrics = [] } = useQuery({
     queryKey: ['metrics', currentRestaurant?.id],
-    queryFn: () => supabaseHelper.Metric.filter({ restaurant_id: currentRestaurant?.id }),
+    queryFn: async () => {
+      // Buscar eventos da tabela metric dos últimos 7 dias
+      const sevenDaysAgo = subDays(new Date(), 6);
+      const dateFilter = format(sevenDaysAgo, 'yyyy-MM-dd');
+      
+      const { data, error } = await supabase
+        .from('metric')
+        .select('*')
+        .eq('restaurant_id', currentRestaurant?.id)
+        .gte('date', dateFilter);
+      
+      if (error) throw error;
+      
+      console.log('📊 Eventos brutos (últimos 7 dias):', data);
+      
+      // Agrupar por data e tipo de evento
+      const grouped = {};
+      (data || []).forEach(evt => {
+        if (!grouped[evt.date]) {
+          grouped[evt.date] = { view: 0, spin: 0, lead: 0 };
+        }
+        if (evt.event_type === 'view') grouped[evt.date].view++;
+        if (evt.event_type === 'spin') grouped[evt.date].spin++;
+        if (evt.event_type === 'lead') grouped[evt.date].lead++;
+      });
+      
+      console.log('📊 Métricas agrupadas:', grouped);
+      
+      // Converter para array de métricas diárias
+      return Object.entries(grouped).map(([date, counts]) => ({
+        date,
+        restaurant_id: currentRestaurant?.id,
+        access: counts.view,
+        spins: counts.spin,
+        leads: counts.lead,
+        conversion_rate: counts.view > 0 ? (counts.lead / counts.view) * 100 : 0
+      }));
+    },
     enabled: !!currentRestaurant?.id
   });
 
@@ -178,9 +215,9 @@ export default function RestaurantDashboard() {
 
   // Calcular métricas totais a partir dos dados diários
   const metricsData = {
-    access: metrics.reduce((sum, m) => sum + (m.access || 0), 0),
-    spins: metrics.reduce((sum, m) => sum + (m.spins || 0), 0),
-    leads: metrics.reduce((sum, m) => sum + (m.leads || 0), 0)
+    access: rawMetrics.reduce((sum, m) => sum + (m.access || 0), 0),
+    spins: rawMetrics.reduce((sum, m) => sum + (m.spins || 0), 0),
+    leads: rawMetrics.reduce((sum, m) => sum + (m.leads || 0), 0)
   };
 
   const conversion = metricsData.access > 0 ? ((metricsData.leads / metricsData.access) * 100).toFixed(1) : '0';
@@ -198,26 +235,19 @@ export default function RestaurantDashboard() {
   
   const unreadNotifications = notifications.filter(n => !n.read).length;
 
-  // Generate chart data (agregando por dia)
+  // Generate chart data
   const generateChartData = () => {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = subDays(new Date(), 6 - i);
       const dateStr = format(date, 'yyyy-MM-dd');
-      
-      // Agrupar todas as métricas do mesmo dia
-      const dayMetrics = metrics.filter(m => m.date === dateStr && m.restaurant_id === currentRestaurant?.id);
-      
-      const totalAccess = dayMetrics.reduce((sum, m) => sum + (m.access || 0), 0);
-      const totalSpins = dayMetrics.reduce((sum, m) => sum + (m.spins || 0), 0);
-      const totalLeads = dayMetrics.reduce((sum, m) => sum + (m.leads || 0), 0);
-      const conversionRate = totalAccess > 0 ? (totalLeads / totalAccess) * 100 : 0;
+      const dayMetric = rawMetrics.find(m => m.date === dateStr);
       
       return {
         date: format(date, 'dd/MM'),
-        access: totalAccess,
-        spins: totalSpins,
-        leads: totalLeads,
-        conversion_rate: conversionRate
+        access: dayMetric?.access || 0,
+        spins: dayMetric?.spins || 0,
+        leads: dayMetric?.leads || 0,
+        conversion_rate: dayMetric?.conversion_rate || 0
       };
     });
     return last7Days;

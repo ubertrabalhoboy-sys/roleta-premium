@@ -48,9 +48,24 @@ export default function SuperAdmin() {
     queryFn: () => supabaseHelper.FoodOption.list()
   });
 
-  const { data: metrics = [] } = useQuery({
+  const { data: rawMetrics = [] } = useQuery({
     queryKey: ['all-metrics'],
-    queryFn: () => supabaseHelper.Metric.list()
+    queryFn: async () => {
+      // Buscar eventos da tabela metric dos últimos 7 dias
+      const sevenDaysAgo = subDays(new Date(), 6);
+      const dateFilter = format(sevenDaysAgo, 'yyyy-MM-dd');
+      
+      const { data, error } = await supabase
+        .from('metric')
+        .select('*')
+        .gte('date', dateFilter);
+      
+      if (error) throw error;
+      
+      console.log('📊 [Super Admin] Eventos brutos (últimos 7 dias):', data);
+      
+      return data || [];
+    }
   });
 
   const { data: prizes = [] } = useQuery({
@@ -202,21 +217,19 @@ export default function SuperAdmin() {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = subDays(new Date(), 6 - i);
       const dateStr = format(date, 'yyyy-MM-dd');
+      const dayEvents = rawMetrics.filter(m => m.date === dateStr);
       
-      // Agrupar todas as métricas do mesmo dia (todos restaurantes)
-      const dayMetrics = metrics.filter(m => m.date === dateStr);
-      
-      const totalAccess = dayMetrics.reduce((sum, m) => sum + (m.access || 0), 0);
-      const totalSpins = dayMetrics.reduce((sum, m) => sum + (m.spins || 0), 0);
-      const totalLeads = dayMetrics.reduce((sum, m) => sum + (m.leads || 0), 0);
-      const conversionRate = totalAccess > 0 ? (totalLeads / totalAccess) * 100 : 0;
+      // Contar eventos por tipo
+      const viewCount = dayEvents.filter(e => e.event_type === 'view').length;
+      const spinCount = dayEvents.filter(e => e.event_type === 'spin').length;
+      const leadCount = dayEvents.filter(e => e.event_type === 'lead').length;
       
       return {
         date: format(date, 'dd/MM'),
-        access: totalAccess,
-        spins: totalSpins,
-        leads: totalLeads,
-        conversion_rate: conversionRate
+        access: viewCount,
+        spins: spinCount,
+        leads: leadCount,
+        conversion_rate: viewCount > 0 ? (leadCount / viewCount) * 100 : 0
       };
     });
     return last7Days;
@@ -226,21 +239,19 @@ export default function SuperAdmin() {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = subDays(new Date(), 6 - i);
       const dateStr = format(date, 'yyyy-MM-dd');
+      const dayEvents = rawMetrics.filter(m => m.date === dateStr && m.restaurant_id === restaurantId);
       
-      // Agrupar todas as métricas do mesmo dia para este restaurante
-      const dayMetrics = metrics.filter(m => m.date === dateStr && m.restaurant_id === restaurantId);
-      
-      const totalAccess = dayMetrics.reduce((sum, m) => sum + (m.access || 0), 0);
-      const totalSpins = dayMetrics.reduce((sum, m) => sum + (m.spins || 0), 0);
-      const totalLeads = dayMetrics.reduce((sum, m) => sum + (m.leads || 0), 0);
-      const conversionRate = totalAccess > 0 ? (totalLeads / totalAccess) * 100 : 0;
+      // Contar eventos por tipo
+      const viewCount = dayEvents.filter(e => e.event_type === 'view').length;
+      const spinCount = dayEvents.filter(e => e.event_type === 'spin').length;
+      const leadCount = dayEvents.filter(e => e.event_type === 'lead').length;
       
       return {
         date: format(date, 'dd/MM'),
-        access: totalAccess,
-        spins: totalSpins,
-        leads: totalLeads,
-        conversion_rate: conversionRate
+        access: viewCount,
+        spins: spinCount,
+        leads: leadCount,
+        conversion_rate: viewCount > 0 ? (leadCount / viewCount) * 100 : 0
       };
     });
     return last7Days;

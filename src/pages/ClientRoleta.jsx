@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabaseHelper } from '@/components/utils/supabaseClient';
+import { supabase, supabaseHelper } from '@/components/utils/supabaseClient';
 import { createPageUrl } from '@/utils';
 import WheelCanvas from '@/components/wheel/WheelCanvas';
 import FairyContainer from '@/components/wheel/FairyContainer';
@@ -38,14 +38,13 @@ export default function ClientRoleta() {
             const rest = restaurants[0];
             setRestaurant(rest);
 
-            // 📊 TRACKING: Registrar visualização da página
-            await supabaseHelper.Metric.create({
+            // 🔥 TRACKING: Registrar VIEW
+            await supabase.from('metric').insert({
               restaurant_id: rest.id,
               date: new Date().toISOString().split('T')[0],
-              access: 1,
-              spins: 0,
-              leads: 0
+              event_type: 'view'
             });
+            console.log('📊 Métrica VIEW registrada');
 
             // Load prizes
             const restPrizes = await supabaseHelper.Prize.filter({ restaurant_id: rest.id });
@@ -73,16 +72,15 @@ export default function ClientRoleta() {
         const rest = JSON.parse(restData);
         setRestaurant(rest);
 
-        try {
-          // 📊 TRACKING: Registrar visualização (simulação)
-          await supabaseHelper.Metric.create({
-            restaurant_id: rest.id,
-            date: new Date().toISOString().split('T')[0],
-            access: 1,
-            spins: 0,
-            leads: 0
-          });
+        // 🔥 TRACKING: Registrar VIEW (simulação)
+        await supabase.from('metric').insert({
+          restaurant_id: rest.id,
+          date: new Date().toISOString().split('T')[0],
+          event_type: 'view'
+        });
+        console.log('📊 Métrica VIEW registrada (simulação)');
 
+        try {
           const restPrizes = await supabaseHelper.Prize.filter({ restaurant_id: rest.id });
           setPrizes(restPrizes || []);
         } catch (error) {
@@ -126,17 +124,14 @@ export default function ClientRoleta() {
     
     setIsSpinning(true);
     
-    // 📊 TRACKING: Registrar giro da roleta
-    try {
-      await supabaseHelper.Metric.create({
+    // 🔥 TRACKING: Registrar SPIN
+    if (restaurant?.id) {
+      await supabase.from('metric').insert({
         restaurant_id: restaurant.id,
         date: new Date().toISOString().split('T')[0],
-        access: 0,
-        spins: 1,
-        leads: 0
+        event_type: 'spin'
       });
-    } catch (error) {
-      console.error('Erro ao registrar spin:', error);
+      console.log('📊 Métrica SPIN registrada');
     }
     
     wheelRef.current?.spin();
@@ -175,14 +170,13 @@ export default function ClientRoleta() {
         sent_by_admin: false
       });
 
-      // 📊 TRACKING: Registrar lead capturado
-      await supabaseHelper.Metric.create({
+      // 🔥 TRACKING: Registrar LEAD
+      await supabase.from('metric').insert({
         restaurant_id: restaurant.id,
         date: new Date().toISOString().split('T')[0],
-        access: 0,
-        spins: 0,
-        leads: 1
+        event_type: 'lead'
       });
+      console.log('📊 Métrica LEAD registrada');
 
       if (restaurant.webhook_url) {
         await fetch(restaurant.webhook_url, {
