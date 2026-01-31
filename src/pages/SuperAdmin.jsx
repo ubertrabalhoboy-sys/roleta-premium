@@ -60,42 +60,59 @@ export default function SuperAdmin() {
 
   const createRestaurantMutation = useMutation({
     mutationFn: async (data) => {
-      // 1. Criar usuário no Supabase Auth
+      // Passo 1: Criar usuário no Supabase Auth PRIMEIRO
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password
       });
 
+      // Passo 2: Validação - Se erro, parar tudo
       if (authError) {
-        throw new Error(`Erro ao criar usuário: ${authError.message}`);
+        alert('Erro ao criar login: ' + authError.message);
+        throw authError;
       }
 
       if (!authData.user) {
-        throw new Error('Usuário não foi criado corretamente');
+        alert('Erro: Usuário não foi criado no sistema de autenticação');
+        throw new Error('Usuário não foi criado');
       }
 
-      // 2. Criar restaurante com owner_id (sem salvar a senha)
-      const restaurant = await supabaseHelper.Restaurant.create({
-        name: data.name,
-        slug: data.slug,
-        owner_email: data.email,
-        owner_id: authData.user.id,
-        color: data.color,
-        status: 'active',
-        metrics_access: 0,
-        metrics_spins: 0,
-        metrics_leads: 0
-      });
+      // Passo 3: Agora sim, criar o restaurante com o owner_id
+      const novoUserId = authData.user.id;
+      
+      const { data: restaurant, error: dbError } = await supabase
+        .from('restaurant')
+        .insert([{
+          id: crypto.randomUUID(),
+          name: data.name,
+          slug: data.slug,
+          owner_email: data.email,
+          owner_id: novoUserId,
+          color: data.color,
+          status: 'active',
+          metrics_access: 0,
+          metrics_spins: 0,
+          metrics_leads: 0,
+          created_date: new Date().toISOString(),
+          updated_date: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (dbError) {
+        alert('Erro ao salvar restaurante no banco: ' + dbError.message);
+        throw dbError;
+      }
       
       return restaurant;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['restaurants']);
       setShowNewRestaurant(false);
-      alert('Restaurante criado com sucesso! O proprietário pode fazer login com as credenciais fornecidas.');
+      alert('✅ Restaurante criado com sucesso! Usuário registrado no Auth e restaurante salvo no banco.');
     },
     onError: (error) => {
-      alert(`Erro ao criar restaurante: ${error.message}`);
+      console.error('Erro completo:', error);
     }
   });
 
