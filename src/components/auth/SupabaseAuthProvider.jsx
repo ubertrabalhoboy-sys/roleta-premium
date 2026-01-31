@@ -17,18 +17,15 @@ export function SupabaseAuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Apenas verificar sessão no Supabase
+    // 1. Pega sessão inicial do Supabase
     supabase.auth.getSession().then(({ data: { session } }) => {
-      // Se tiver sessão, salva. Se não, não faz nada (não chama API antiga!)
-      console.log('Sessão Supabase:', session);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Escutar mudanças de autenticação
+    // 2. Escuta alterações de login/logout
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('Mudança de auth:', _event, session);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);

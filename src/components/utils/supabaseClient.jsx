@@ -1,16 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
-// COLOCANDO AS CHAVES DIRETO AQUI PARA CORRIGIR O ERRO
 const supabaseUrl = 'https://rcnqcaaffubdtwcroitz.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbnFjYWFmZnViZHR3Y3JvaXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg0MTgxODcsImV4cCI6MjA1Mzk5NDE4N30.bMgun924YnThWXlMxZA50Q_NXxQksZd';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbnFjYWFmZnViZHR3Y3JvaXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NDYyNDUsImV4cCI6MjA4NTQyMjI0NX0.dywBYGIlDelQswuVsAzzT1Xpfl5vKLMdza9k7nYh7EE';
 
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: false
-  }
-});
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Helper functions to match Base44 API
 export const supabaseHelper = {
