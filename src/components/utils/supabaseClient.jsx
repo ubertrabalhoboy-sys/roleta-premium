@@ -24,9 +24,15 @@ export const supabaseHelper = {
       return data || [];
     },
     async create(payload) {
+      const restaurantData = {
+        ...payload,
+        id: payload.id || crypto.randomUUID(),
+        created_date: new Date().toISOString(),
+        updated_date: new Date().toISOString()
+      };
       const { data, error } = await supabase
         .from('restaurant')
-        .insert([{ ...payload, id: crypto.randomUUID(), created_date: new Date().toISOString(), updated_date: new Date().toISOString() }])
+        .insert([restaurantData])
         .select()
         .single();
       if (error) throw error;

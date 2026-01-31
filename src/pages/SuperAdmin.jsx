@@ -74,12 +74,12 @@ export default function SuperAdmin() {
         throw new Error('Usuário não foi criado corretamente');
       }
 
-      // 2. Criar restaurante com owner_id (sem salvar a senha)
+      // 2. Criar restaurante usando o ID do usuário Auth como ID do restaurante
       const restaurant = await supabaseHelper.Restaurant.create({
+        id: authData.user.id,
         name: data.name,
         slug: data.slug,
         owner_email: data.email,
-        owner_id: authData.user.id,
         color: data.color,
         status: 'active',
         metrics_access: 0,
