@@ -1,33 +1,22 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// COLOCANDO AS CHAVES DIRETO AQUI PARA CORRIGIR O ERRO
+const supabaseUrl = 'https://rcnqcaaffubdtwcroitz.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbnFjYWFmZnViZHR3Y3JvaXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg0MTgxODcsImV4cCI6MjA1Mzk5NDE4N30.bMgun924YnThWXlMxZA50Q_NXxQksZd';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ ERRO: Supabase não inicializado! Verifique VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY');
-}
-
-export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false
-      }
-    })
-  : null;
-
-// Verificação de segurança
-if (!supabase) {
-  console.error('❌ Supabase não inicializado! Configure as variáveis de ambiente.');
-}
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false
+  }
+});
 
 // Helper functions to match Base44 API
 export const supabaseHelper = {
   // Restaurant operations
   Restaurant: {
     async list() {
-      if (!supabase) throw new Error('Supabase not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
       const { data, error } = await supabase.from('Restaurant').select('*');
       if (error) throw error;
       return data || [];
