@@ -1,17 +1,17 @@
-import { base44 } from '@/api/base44Client';
+import { supabaseHelper } from '@/components/utils/supabaseClient';
 
 export class NotificationService {
   
   // Criar notificação
   static async create(data) {
-    return await base44.entities.Notification.create(data);
+    return await supabaseHelper.Notification.create(data);
   }
 
   // Verificar e criar notificação de lead quente
   static async checkHotLead(lead, restaurantId) {
     if (lead.day_pref && lead.time_pref && lead.fav_product) {
       // Verificar se já existe uma notificação não lida para este lead
-      const existingNotifications = await base44.entities.Notification.filter({
+      const existingNotifications = await supabaseHelper.Notification.filter({
         restaurant_id: restaurantId,
         type: 'hot_lead'
       });
@@ -98,18 +98,18 @@ export class NotificationService {
 
   // Marcar como lida
   static async markAsRead(notificationId) {
-    return await base44.entities.Notification.update(notificationId, { read: true });
+    return await supabaseHelper.Notification.update(notificationId, { read: true });
   }
 
   // Marcar todas como lidas
   static async markAllAsRead(restaurantId) {
-    const notifications = await base44.entities.Notification.filter({ 
+    const notifications = await supabaseHelper.Notification.filter({ 
       restaurant_id: restaurantId,
       read: false 
     });
     
     await Promise.all(
-      notifications.map(n => base44.entities.Notification.update(n.id, { read: true }))
+      notifications.map(n => supabaseHelper.Notification.update(n.id, { read: true }))
     );
   }
 }

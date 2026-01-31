@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabaseHelper } from '@/components/utils/supabaseClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPageUrl } from '@/utils';
 import SoftCard from '@/components/ui/SoftCard';
@@ -37,18 +37,18 @@ export default function LeadsManagement() {
 
   const { data: leads = [] } = useQuery({
     queryKey: ['restaurant-leads', restaurant?.id],
-    queryFn: () => base44.entities.Lead.filter({ restaurant_id: restaurant?.id }),
+    queryFn: () => supabaseHelper.Lead.filter({ restaurant_id: restaurant?.id }),
     enabled: !!restaurant?.id
   });
 
   const { data: prizes = [] } = useQuery({
     queryKey: ['prizes', restaurant?.id],
-    queryFn: () => base44.entities.Prize.filter({ restaurant_id: restaurant?.id }),
+    queryFn: () => supabaseHelper.Prize.filter({ restaurant_id: restaurant?.id }),
     enabled: !!restaurant?.id
   });
 
   const updateLeadMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Lead.update(id, data),
+    mutationFn: ({ id, data }) => supabaseHelper.Lead.update(id, data),
     onSuccess: () => queryClient.invalidateQueries(['restaurant-leads'])
   });
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabaseHelper } from '@/components/utils/supabaseClient';
 import SoftButton from '../ui/SoftButton';
 import SoftInput from '../ui/SoftInput';
 
@@ -49,7 +49,7 @@ export default function WhatsAppModal({
 
       // Atualizar status do lead
       if (leadId) {
-        await base44.entities.Lead.update(leadId, {
+        await supabaseHelper.Lead.update(leadId, {
           sent_by_admin: true
         });
       }
