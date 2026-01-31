@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabaseHelper } from '@/components/utils/supabaseClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPageUrl } from '@/utils';
 import { format, subDays } from 'date-fns';
@@ -44,35 +44,35 @@ export default function RestaurantDashboard() {
 
   const { data: leads = [] } = useQuery({
     queryKey: ['leads', currentRestaurant?.id],
-    queryFn: () => base44.entities.Lead.filter({ restaurant_id: currentRestaurant?.id }),
+    queryFn: () => supabaseHelper.Lead.filter({ restaurant_id: currentRestaurant?.id }),
     enabled: !!currentRestaurant?.id
   });
 
   const { data: prizes = [] } = useQuery({
     queryKey: ['prizes', currentRestaurant?.id],
-    queryFn: () => base44.entities.Prize.filter({ restaurant_id: currentRestaurant?.id }),
+    queryFn: () => supabaseHelper.Prize.filter({ restaurant_id: currentRestaurant?.id }),
     enabled: !!currentRestaurant?.id
   });
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', currentRestaurant?.id],
-    queryFn: () => base44.entities.Notification.filter({ restaurant_id: currentRestaurant?.id }),
+    queryFn: () => supabaseHelper.Notification.filter({ restaurant_id: currentRestaurant?.id }),
     enabled: !!currentRestaurant?.id
   });
 
   const { data: metrics = [] } = useQuery({
     queryKey: ['metrics', currentRestaurant?.id],
-    queryFn: () => base44.entities.Metric.filter({ restaurant_id: currentRestaurant?.id }),
+    queryFn: () => supabaseHelper.Metric.filter({ restaurant_id: currentRestaurant?.id }),
     enabled: !!currentRestaurant?.id
   });
 
   const deletePrizeMutation = useMutation({
-    mutationFn: (id) => base44.entities.Prize.delete(id),
+    mutationFn: (id) => supabaseHelper.Prize.delete(id),
     onSuccess: () => queryClient.invalidateQueries(['prizes'])
   });
 
   const createPrizeMutation = useMutation({
-    mutationFn: (data) => base44.entities.Prize.create({
+    mutationFn: (data) => supabaseHelper.Prize.create({
       ...data,
       restaurant_id: currentRestaurant?.id,
       color: '#' + Math.floor(Math.random()*16777215).toString(16)

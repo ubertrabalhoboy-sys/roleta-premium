@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabaseHelper } from '@/components/utils/supabaseClient';
 import { createPageUrl } from '@/utils';
 import WheelCanvas from '@/components/wheel/WheelCanvas';
 import FairyContainer from '@/components/wheel/FairyContainer';
@@ -33,15 +33,15 @@ export default function ClientRoleta() {
       
       if (slug) {
         try {
-          const restaurants = await base44.entities.Restaurant.filter({ slug: slug });
+          const restaurants = await supabaseHelper.Restaurant.filter({ slug: slug });
           if (restaurants && restaurants.length > 0) {
             const rest = restaurants[0];
             setRestaurant(rest);
-            
+
             // Load prizes
-            const restPrizes = await base44.entities.Prize.filter({ restaurant_id: rest.id });
+            const restPrizes = await supabaseHelper.Prize.filter({ restaurant_id: rest.id });
             setPrizes(restPrizes || []);
-            
+
             // Check if already spun
             const spunKey = `hasSpun_${rest.id}`;
             if (localStorage.getItem(spunKey)) {
@@ -63,14 +63,14 @@ export default function ClientRoleta() {
         }
         const rest = JSON.parse(restData);
         setRestaurant(rest);
-        
+
         try {
-          const restPrizes = await base44.entities.Prize.filter({ restaurant_id: rest.id });
+          const restPrizes = await supabaseHelper.Prize.filter({ restaurant_id: rest.id });
           setPrizes(restPrizes || []);
         } catch (error) {
           console.error('Erro ao carregar prêmios:', error);
         }
-        
+
         // Check if already spun
         const spunKey = `hasSpun_${rest.id}`;
         if (localStorage.getItem(spunKey)) {
@@ -80,7 +80,7 @@ export default function ClientRoleta() {
 
       // Load food options
       try {
-        const options = await base44.entities.FoodOption.list();
+        const options = await supabaseHelper.FoodOption.list();
         setFoodOptions(options || []);
       } catch (error) {
         console.error('Erro ao carregar opções de comida:', error);

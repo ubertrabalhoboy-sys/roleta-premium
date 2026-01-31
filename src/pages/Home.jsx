@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabaseHelper } from '@/components/utils/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
 import SoftCard from '@/components/ui/SoftCard';
 import SoftButton from '@/components/ui/SoftButton';
@@ -15,7 +15,7 @@ export default function Home() {
 
   const { data: restaurants = [] } = useQuery({
     queryKey: ['restaurants'],
-    queryFn: () => base44.entities.Restaurant.list()
+    queryFn: () => supabaseHelper.Restaurant.list()
   });
 
   const handleLogin = (e) => {

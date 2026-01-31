@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabaseHelper } from '@/components/utils/supabaseClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPageUrl } from '@/utils';
 import { format, subDays } from 'date-fns';
@@ -35,32 +35,32 @@ export default function SuperAdmin() {
 
   const { data: restaurants = [] } = useQuery({
     queryKey: ['restaurants'],
-    queryFn: () => base44.entities.Restaurant.list()
+    queryFn: () => supabaseHelper.Restaurant.list()
   });
 
   const { data: leads = [] } = useQuery({
     queryKey: ['all-leads'],
-    queryFn: () => base44.entities.Lead.list()
+    queryFn: () => supabaseHelper.Lead.list()
   });
 
   const { data: foodOptions = [] } = useQuery({
     queryKey: ['food-options'],
-    queryFn: () => base44.entities.FoodOption.list()
+    queryFn: () => supabaseHelper.FoodOption.list()
   });
 
   const { data: metrics = [] } = useQuery({
     queryKey: ['all-metrics'],
-    queryFn: () => base44.entities.Metric.list()
+    queryFn: () => supabaseHelper.Metric.list()
   });
 
   const { data: prizes = [] } = useQuery({
     queryKey: ['all-prizes'],
-    queryFn: () => base44.entities.Prize.list()
+    queryFn: () => supabaseHelper.Prize.list()
   });
 
   const createRestaurantMutation = useMutation({
     mutationFn: async (data) => {
-      const restaurant = await base44.entities.Restaurant.create({
+      const restaurant = await supabaseHelper.Restaurant.create({
         name: data.name,
         slug: data.slug,
         owner_email: data.email,
@@ -72,11 +72,6 @@ export default function SuperAdmin() {
         metrics_leads: 0
       });
       
-      // Enviar convite para o proprietário
-      if (data.email) {
-        await base44.users.inviteUser(data.email, 'user');
-      }
-      
       return restaurant;
     },
     onSuccess: () => {
@@ -86,36 +81,36 @@ export default function SuperAdmin() {
   });
 
   const toggleRestaurantMutation = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.Restaurant.update(id, { 
+    mutationFn: ({ id, status }) => supabaseHelper.Restaurant.update(id, { 
       status: status === 'active' ? 'paused' : 'active' 
     }),
     onSuccess: () => queryClient.invalidateQueries(['restaurants'])
   });
 
   const deleteRestaurantMutation = useMutation({
-    mutationFn: (id) => base44.entities.Restaurant.delete(id),
+    mutationFn: (id) => supabaseHelper.Restaurant.delete(id),
     onSuccess: () => queryClient.invalidateQueries(['restaurants'])
   });
 
   const addFoodOptionMutation = useMutation({
-    mutationFn: (name) => base44.entities.FoodOption.create({ name }),
+    mutationFn: (name) => supabaseHelper.FoodOption.create({ name }),
     onSuccess: () => queryClient.invalidateQueries(['food-options'])
   });
 
   const removeFoodOptionMutation = useMutation({
-    mutationFn: (id) => base44.entities.FoodOption.delete(id),
+    mutationFn: (id) => supabaseHelper.FoodOption.delete(id),
     onSuccess: () => queryClient.invalidateQueries(['food-options'])
   });
 
   const updateLeadMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Lead.update(id, data),
+    mutationFn: ({ id, data }) => supabaseHelper.Lead.update(id, data),
     onSuccess: () => queryClient.invalidateQueries(['all-leads'])
   });
 
   const deleteAllNotificationsMutation = useMutation({
     mutationFn: async () => {
-      const allNotifications = await base44.entities.Notification.list();
-      await Promise.all(allNotifications.map(n => base44.entities.Notification.delete(n.id)));
+      const allNotifications = await supabaseHelper.Notification.list();
+      await Promise.all(allNotifications.map(n => supabaseHelper.Notification.delete(n.id)));
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['notifications']);
@@ -376,7 +371,7 @@ export default function SuperAdmin() {
                           placeholder="URL do webhook Fiqon"
                           value={rest.webhook_url || ''}
                           onChange={(e) => {
-                            base44.entities.Restaurant.update(rest.id, { webhook_url: e.target.value })
+                            supabaseHelper.Restaurant.update(rest.id, { webhook_url: e.target.value })
                               .then(() => queryClient.invalidateQueries(['restaurants']));
                           }}
                           className="w-full px-2 py-1 text-xs rounded border border-gray-300 focus:border-[#6c5ce7] focus:outline-none"
