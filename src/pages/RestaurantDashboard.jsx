@@ -198,19 +198,26 @@ export default function RestaurantDashboard() {
   
   const unreadNotifications = notifications.filter(n => !n.read).length;
 
-  // Generate chart data
+  // Generate chart data (agregando por dia)
   const generateChartData = () => {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = subDays(new Date(), 6 - i);
       const dateStr = format(date, 'yyyy-MM-dd');
-      const dayMetric = metrics.find(m => m.date === dateStr && m.restaurant_id === currentRestaurant?.id);
+      
+      // Agrupar todas as métricas do mesmo dia
+      const dayMetrics = metrics.filter(m => m.date === dateStr && m.restaurant_id === currentRestaurant?.id);
+      
+      const totalAccess = dayMetrics.reduce((sum, m) => sum + (m.access || 0), 0);
+      const totalSpins = dayMetrics.reduce((sum, m) => sum + (m.spins || 0), 0);
+      const totalLeads = dayMetrics.reduce((sum, m) => sum + (m.leads || 0), 0);
+      const conversionRate = totalAccess > 0 ? (totalLeads / totalAccess) * 100 : 0;
       
       return {
         date: format(date, 'dd/MM'),
-        access: dayMetric?.access || 0,
-        spins: dayMetric?.spins || 0,
-        leads: dayMetric?.leads || 0,
-        conversion_rate: dayMetric?.conversion_rate || 0
+        access: totalAccess,
+        spins: totalSpins,
+        leads: totalLeads,
+        conversion_rate: conversionRate
       };
     });
     return last7Days;

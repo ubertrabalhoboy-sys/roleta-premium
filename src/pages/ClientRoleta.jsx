@@ -38,6 +38,15 @@ export default function ClientRoleta() {
             const rest = restaurants[0];
             setRestaurant(rest);
 
+            // 📊 TRACKING: Registrar visualização da página
+            await supabaseHelper.Metric.create({
+              restaurant_id: rest.id,
+              date: new Date().toISOString().split('T')[0],
+              access: 1,
+              spins: 0,
+              leads: 0
+            });
+
             // Load prizes
             const restPrizes = await supabaseHelper.Prize.filter({ restaurant_id: rest.id });
             setPrizes(restPrizes || []);
@@ -65,6 +74,15 @@ export default function ClientRoleta() {
         setRestaurant(rest);
 
         try {
+          // 📊 TRACKING: Registrar visualização (simulação)
+          await supabaseHelper.Metric.create({
+            restaurant_id: rest.id,
+            date: new Date().toISOString().split('T')[0],
+            access: 1,
+            spins: 0,
+            leads: 0
+          });
+
           const restPrizes = await supabaseHelper.Prize.filter({ restaurant_id: rest.id });
           setPrizes(restPrizes || []);
         } catch (error) {
@@ -107,6 +125,20 @@ export default function ClientRoleta() {
     if (isSpinning || hasSpun || prizes.length === 0) return;
     
     setIsSpinning(true);
+    
+    // 📊 TRACKING: Registrar giro da roleta
+    try {
+      await supabaseHelper.Metric.create({
+        restaurant_id: restaurant.id,
+        date: new Date().toISOString().split('T')[0],
+        access: 0,
+        spins: 1,
+        leads: 0
+      });
+    } catch (error) {
+      console.error('Erro ao registrar spin:', error);
+    }
+    
     wheelRef.current?.spin();
   };
 
@@ -141,6 +173,15 @@ export default function ClientRoleta() {
         fav_product: data.favProduct,
         coupon_status: 'pending',
         sent_by_admin: false
+      });
+
+      // 📊 TRACKING: Registrar lead capturado
+      await supabaseHelper.Metric.create({
+        restaurant_id: restaurant.id,
+        date: new Date().toISOString().split('T')[0],
+        access: 0,
+        spins: 0,
+        leads: 1
       });
 
       if (restaurant.webhook_url) {
