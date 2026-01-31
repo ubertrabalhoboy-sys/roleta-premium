@@ -67,21 +67,22 @@ export default function Home() {
         return;
       }
 
-      // BUSCAR RESTAURANTE usando ID do Auth (restaurant.id = user.id)
-      const { data: restaurantData, error: restaurantError } = await supabase
+      // BUSCAR RESTAURANTE usando owner_id (coluna que vincula ao Auth)
+      const { data: lojas, error: restaurantError } = await supabase
         .from('restaurant')
         .select('*')
-        .eq('id', data.user.id)
-        .single();
+        .eq('owner_id', data.user.id);
 
-      console.log('🔍 Busca Restaurante:', { 
+      console.log('🔍 Lojas encontradas:', lojas);
+      console.log('📋 Debug completo:', { 
         userId: data.user.id,
         userEmail: data.user.email,
-        restaurantData, 
+        totalLojas: lojas?.length || 0,
         restaurantError: restaurantError?.message
       });
 
-      if (restaurantData && !restaurantError) {
+      if (lojas && lojas.length > 0 && !restaurantError) {
+        const restaurantData = lojas[0];
         sessionStorage.setItem('userType', 'restaurant');
         sessionStorage.setItem('currentRestaurant', JSON.stringify(restaurantData));
         console.log('✅ Redirecionando para Dashboard...');
