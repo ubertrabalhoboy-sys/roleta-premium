@@ -33,36 +33,58 @@ export default function RestaurantDashboard() {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      const restData = sessionStorage.getItem('currentRestaurant');
 
-      if (!user || !restData) {
+      if (!user) {
         navigate(createPageUrl('Home'));
         return;
       }
-      
-      const parsedRestData = JSON.parse(restData);
-      if (user.email !== parsedRestData.owner_email) {
-        alert('Acesso não autorizado.');
+
+      console.log('🔐 Usuário autenticado:', user.id, user.email);
+
+      // ETAPA 1: Buscar restaurante usando owner_id = user.id
+      const { data: loja, error: lojaError } = await supabase
+        .from('restaurant')
+        .select('*')
+        .eq('owner_id', user.id)
+        .single();
+
+      console.log('🏪 Busca do restaurante:', { loja, lojaError });
+
+      if (lojaError || !loja) {
+        alert('❌ Usuário não possui restaurante vinculado.');
         await supabase.auth.signOut();
         sessionStorage.clear();
         navigate(createPageUrl('Home'));
         return;
       }
 
-      setCurrentRestaurant(parsedRestData);
+      console.log('✅ Restaurante encontrado:', loja.id, loja.name);
+      
+      setCurrentRestaurant(loja);
+      sessionStorage.setItem('currentRestaurant', JSON.stringify(loja));
     };
     checkAuth();
   }, [navigate]);
 
   const { data: leads = [] } = useQuery({
     queryKey: ['leads', currentRestaurant?.id],
-    queryFn: () => supabaseHelper.Lead.filter({ restaurant_id: currentRestaurant?.id }),
+    queryFn: async () => {
+      console.log('📋 Buscando leads para restaurant_id:', currentRestaurant?.id);
+      const result = await supabaseHelper.Lead.filter({ restaurant_id: currentRestaurant?.id });
+      console.log('📋 Leads encontrados:', result.length);
+      return result;
+    },
     enabled: !!currentRestaurant?.id
   });
 
   const { data: prizes = [] } = useQuery({
     queryKey: ['prizes', currentRestaurant?.id],
-    queryFn: () => supabaseHelper.Prize.filter({ restaurant_id: currentRestaurant?.id }),
+    queryFn: async () => {
+      console.log('🎁 Buscando prêmios para restaurant_id:', currentRestaurant?.id);
+      const result = await supabaseHelper.Prize.filter({ restaurant_id: currentRestaurant?.id });
+      console.log('🎁 Prêmios encontrados:', result.length);
+      return result;
+    },
     enabled: !!currentRestaurant?.id
   });
 
@@ -75,6 +97,8 @@ export default function RestaurantDashboard() {
   const { data: rawMetrics = [] } = useQuery({
     queryKey: ['metrics', currentRestaurant?.id],
     queryFn: async () => {
+      console.log('📊 Buscando métricas para restaurant_id:', currentRestaurant?.id);
+      
       // Buscar eventos da tabela metric dos últimos 7 dias
       const sevenDaysAgo = subDays(new Date(), 6);
       const dateFilter = format(sevenDaysAgo, 'yyyy-MM-dd');
@@ -85,19 +109,22 @@ export default function RestaurantDashboard() {
         .eq('restaurant_id', currentRestaurant?.id)
         .gte('date', dateFilter);
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao buscar métricas:', error);
+        throw error;
+      }
       
       console.log('📊 Eventos brutos (últimos 7 dias):', data);
       
-      // Agrupar por data e tipo de evento
+      // Agrupar por data
       const grouped = {};
       (data || []).forEach(evt => {
         if (!grouped[evt.date]) {
-          grouped[evt.date] = { view: 0, spin: 0, lead: 0 };
+          grouped[evt.date] = { access: 0, spins: 0, leads: 0 };
         }
-        if (evt.event_type === 'view') grouped[evt.date].view++;
-        if (evt.event_type === 'spin') grouped[evt.date].spin++;
-        if (evt.event_type === 'lead') grouped[evt.date].lead++;
+        grouped[evt.date].access += evt.access || 0;
+        grouped[evt.date].spins += evt.spins || 0;
+        grouped[evt.date].leads += evt.leads || 0;
       });
       
       console.log('📊 Métricas agrupadas:', grouped);
@@ -106,10 +133,10 @@ export default function RestaurantDashboard() {
       return Object.entries(grouped).map(([date, counts]) => ({
         date,
         restaurant_id: currentRestaurant?.id,
-        access: counts.view,
-        spins: counts.spin,
-        leads: counts.lead,
-        conversion_rate: counts.view > 0 ? (counts.lead / counts.view) * 100 : 0
+        access: counts.access,
+        spins: counts.spins,
+        leads: counts.leads,
+        conversion_rate: counts.access > 0 ? (counts.leads / counts.access) * 100 : 0
       }));
     },
     enabled: !!currentRestaurant?.id
