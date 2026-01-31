@@ -31,23 +31,35 @@ export default function Home() {
         return;
       }
 
-      // Autenticação padrão usando Supabase Auth
+      // AUTENTICAÇÃO PADRÃO SUPABASE (para todos os usuários)
       const { data, error } = await supabase.auth.signInWithPassword({ 
         email, 
         password 
       });
 
+      console.log('🔐 Resultado Auth:', { 
+        user: data?.user?.id, 
+        email: data?.user?.email,
+        error: error?.message 
+      });
+
       if (error) {
-        alert(`Erro de autenticação: ${error.message}`);
+        if (error.message.includes('Email not confirmed')) {
+          alert('⚠️ Email não confirmado. Verifique sua caixa de entrada ou desative confirmação no Supabase.');
+        } else if (error.message.includes('Invalid login credentials')) {
+          alert('❌ Credenciais inválidas. Verifique email e senha.');
+        } else {
+          alert(`Erro: ${error.message}`);
+        }
         return;
       }
 
       if (!data.user) {
-        alert('Não foi possível autenticar o usuário.');
+        alert('Erro ao autenticar. Tente novamente.');
         return;
       }
 
-      // Verificação VIP: Super Admin com email específico
+      // Verificação VIP: Super Admin
       if (data.user.email === 'rag.alvesg@gmail.com') {
         sessionStorage.setItem('userType', 'super_admin');
         sessionStorage.removeItem('currentRestaurant');
@@ -55,7 +67,7 @@ export default function Home() {
         return;
       }
 
-      // Buscar restaurante (o ID do restaurante é o mesmo do usuário Auth)
+      // BUSCAR RESTAURANTE usando ID do Auth (restaurant.id = user.id)
       const { data: restaurantData, error: restaurantError } = await supabase
         .from('restaurant')
         .select('*')
@@ -66,18 +78,20 @@ export default function Home() {
         userId: data.user.id,
         userEmail: data.user.email,
         restaurantData, 
-        restaurantError 
+        restaurantError: restaurantError?.message
       });
 
       if (restaurantData && !restaurantError) {
         sessionStorage.setItem('userType', 'restaurant');
         sessionStorage.setItem('currentRestaurant', JSON.stringify(restaurantData));
+        console.log('✅ Redirecionando para Dashboard...');
         navigate(createPageUrl('RestaurantDashboard'));
       } else {
-        alert('Usuário não possui restaurante vinculado. Contate o administrador.');
+        alert('❌ Usuário não possui restaurante vinculado. Contate o administrador.');
         await supabase.auth.signOut();
       }
     } catch (error) {
+      console.error('Erro no login:', error);
       alert(`Erro: ${error.message}`);
     }
   };
