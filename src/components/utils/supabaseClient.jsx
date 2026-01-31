@@ -10,19 +10,12 @@ export const supabaseHelper = {
   // Restaurant operations
   Restaurant: {
     async list() {
-      // Testando ambos os casos (maiúsculo e minúsculo)
-      let { data, error } = await supabase.from('restaurant').select('*');
-      if (error) {
-        // Tentar com R maiúsculo se falhar
-        const retry = await supabase.from('Restaurant').select('*');
-        data = retry.data;
-        error = retry.error;
-      }
+      const { data, error } = await supabase.from('restaurant').select('*');
       if (error) throw error;
       return data || [];
     },
     async filter(conditions) {
-      let query = supabase.from('Restaurant').select('*');
+      let query = supabase.from('restaurant').select('*');
       Object.entries(conditions).forEach(([key, value]) => {
         query = query.eq(key, value);
       });
@@ -32,7 +25,7 @@ export const supabaseHelper = {
     },
     async create(payload) {
       const { data, error } = await supabase
-        .from('Restaurant')
+        .from('restaurant')
         .insert([{ ...payload, id: crypto.randomUUID(), created_date: new Date().toISOString(), updated_date: new Date().toISOString() }])
         .select()
         .single();
@@ -41,7 +34,7 @@ export const supabaseHelper = {
     },
     async update(id, payload) {
       const { data, error } = await supabase
-        .from('Restaurant')
+        .from('restaurant')
         .update({ ...payload, updated_date: new Date().toISOString() })
         .eq('id', id)
         .select()
@@ -50,7 +43,7 @@ export const supabaseHelper = {
       return data;
     },
     async delete(id) {
-      const { error } = await supabase.from('Restaurant').delete().eq('id', id);
+      const { error } = await supabase.from('restaurant').delete().eq('id', id);
       if (error) throw error;
     }
   },
@@ -58,12 +51,12 @@ export const supabaseHelper = {
   // Lead operations
   Lead: {
     async list() {
-      const { data, error } = await supabase.from('Lead').select('*');
+      const { data, error } = await supabase.from('lead').select('*');
       if (error) throw error;
       return data || [];
     },
     async filter(conditions) {
-      let query = supabase.from('Lead').select('*');
+      let query = supabase.from('lead').select('*');
       Object.entries(conditions).forEach(([key, value]) => {
         query = query.eq(key, value);
       });
@@ -73,7 +66,7 @@ export const supabaseHelper = {
     },
     async create(payload) {
       const { data, error } = await supabase
-        .from('Lead')
+        .from('lead')
         .insert([{ ...payload, id: crypto.randomUUID(), created_date: new Date().toISOString(), updated_date: new Date().toISOString() }])
         .select()
         .single();
@@ -82,7 +75,7 @@ export const supabaseHelper = {
     },
     async update(id, payload) {
       const { data, error } = await supabase
-        .from('Lead')
+        .from('lead')
         .update({ ...payload, updated_date: new Date().toISOString() })
         .eq('id', id)
         .select()
@@ -91,7 +84,7 @@ export const supabaseHelper = {
       return data;
     },
     async delete(id) {
-      const { error } = await supabase.from('Lead').delete().eq('id', id);
+      const { error } = await supabase.from('lead').delete().eq('id', id);
       if (error) throw error;
     }
   },
@@ -99,12 +92,12 @@ export const supabaseHelper = {
   // Prize operations
   Prize: {
     async list() {
-      const { data, error } = await supabase.from('Prize').select('*');
+      const { data, error } = await supabase.from('prize').select('*');
       if (error) throw error;
       return data || [];
     },
     async filter(conditions) {
-      let query = supabase.from('Prize').select('*');
+      let query = supabase.from('prize').select('*');
       Object.entries(conditions).forEach(([key, value]) => {
         query = query.eq(key, value);
       });
@@ -114,7 +107,7 @@ export const supabaseHelper = {
     },
     async create(payload) {
       const { data, error } = await supabase
-        .from('Prize')
+        .from('prize')
         .insert([{ ...payload, id: crypto.randomUUID(), created_date: new Date().toISOString(), updated_date: new Date().toISOString() }])
         .select()
         .single();
@@ -123,7 +116,7 @@ export const supabaseHelper = {
     },
     async update(id, payload) {
       const { data, error } = await supabase
-        .from('Prize')
+        .from('prize')
         .update({ ...payload, updated_date: new Date().toISOString() })
         .eq('id', id)
         .select()
@@ -132,7 +125,7 @@ export const supabaseHelper = {
       return data;
     },
     async delete(id) {
-      const { error } = await supabase.from('Prize').delete().eq('id', id);
+      const { error } = await supabase.from('prize').delete().eq('id', id);
       if (error) throw error;
     }
   },
@@ -140,13 +133,13 @@ export const supabaseHelper = {
   // FoodOption operations
   FoodOption: {
     async list() {
-      const { data, error } = await supabase.from('FoodOption').select('*');
+      const { data, error } = await supabase.from('foodoption').select('*');
       if (error) throw error;
       return data || [];
     },
     async create(payload) {
       const { data, error } = await supabase
-        .from('FoodOption')
+        .from('foodoption')
         .insert([{ ...payload, id: crypto.randomUUID(), created_date: new Date().toISOString(), updated_date: new Date().toISOString() }])
         .select()
         .single();
@@ -154,7 +147,7 @@ export const supabaseHelper = {
       return data;
     },
     async delete(id) {
-      const { error } = await supabase.from('FoodOption').delete().eq('id', id);
+      const { error } = await supabase.from('foodoption').delete().eq('id', id);
       if (error) throw error;
     }
   },
@@ -162,12 +155,12 @@ export const supabaseHelper = {
   // Notification operations
   Notification: {
     async list() {
-      const { data, error } = await supabase.from('Notification').select('*');
+      const { data, error } = await supabase.from('notification').select('*');
       if (error) throw error;
       return data || [];
     },
     async filter(conditions) {
-      let query = supabase.from('Notification').select('*');
+      let query = supabase.from('notification').select('*');
       Object.entries(conditions).forEach(([key, value]) => {
         query = query.eq(key, value);
       });
@@ -177,7 +170,7 @@ export const supabaseHelper = {
     },
     async create(payload) {
       const { data, error } = await supabase
-        .from('Notification')
+        .from('notification')
         .insert([{ ...payload, id: crypto.randomUUID(), created_date: new Date().toISOString(), updated_date: new Date().toISOString() }])
         .select()
         .single();
@@ -186,7 +179,7 @@ export const supabaseHelper = {
     },
     async update(id, payload) {
       const { data, error } = await supabase
-        .from('Notification')
+        .from('notification')
         .update({ ...payload, updated_date: new Date().toISOString() })
         .eq('id', id)
         .select()
@@ -195,7 +188,7 @@ export const supabaseHelper = {
       return data;
     },
     async delete(id) {
-      const { error } = await supabase.from('Notification').delete().eq('id', id);
+      const { error } = await supabase.from('notification').delete().eq('id', id);
       if (error) throw error;
     }
   },
@@ -203,12 +196,12 @@ export const supabaseHelper = {
   // Metric operations
   Metric: {
     async list() {
-      const { data, error } = await supabase.from('Metric').select('*');
+      const { data, error } = await supabase.from('metric').select('*');
       if (error) throw error;
       return data || [];
     },
     async filter(conditions) {
-      let query = supabase.from('Metric').select('*');
+      let query = supabase.from('metric').select('*');
       Object.entries(conditions).forEach(([key, value]) => {
         query = query.eq(key, value);
       });
@@ -218,7 +211,7 @@ export const supabaseHelper = {
     },
     async create(payload) {
       const { data, error } = await supabase
-        .from('Metric')
+        .from('metric')
         .insert([{ ...payload, id: crypto.randomUUID(), created_date: new Date().toISOString(), updated_date: new Date().toISOString() }])
         .select()
         .single();
@@ -227,7 +220,7 @@ export const supabaseHelper = {
     },
     async update(id, payload) {
       const { data, error } = await supabase
-        .from('Metric')
+        .from('metric')
         .update({ ...payload, updated_date: new Date().toISOString() })
         .eq('id', id)
         .select()
