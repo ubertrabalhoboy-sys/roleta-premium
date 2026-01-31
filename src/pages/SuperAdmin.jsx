@@ -60,11 +60,26 @@ export default function SuperAdmin() {
 
   const createRestaurantMutation = useMutation({
     mutationFn: async (data) => {
+      // 1. Criar usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password
+      });
+
+      if (authError) {
+        throw new Error(`Erro ao criar usuário: ${authError.message}`);
+      }
+
+      if (!authData.user) {
+        throw new Error('Usuário não foi criado corretamente');
+      }
+
+      // 2. Criar restaurante com owner_id (sem salvar a senha)
       const restaurant = await supabaseHelper.Restaurant.create({
         name: data.name,
         slug: data.slug,
         owner_email: data.email,
-        password: data.password,
+        owner_id: authData.user.id,
         color: data.color,
         status: 'active',
         metrics_access: 0,
@@ -77,6 +92,7 @@ export default function SuperAdmin() {
     onSuccess: () => {
       queryClient.invalidateQueries(['restaurants']);
       setShowNewRestaurant(false);
+      alert('Restaurante criado com sucesso! O proprietário pode fazer login com as credenciais fornecidas.');
     },
     onError: (error) => {
       alert(`Erro ao criar restaurante: ${error.message}`);
