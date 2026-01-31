@@ -41,6 +41,14 @@ export default function Home() {
       }
 
       if (data.user) {
+        // Verificação VIP: Super Admin com email específico
+        if (data.user.email === 'rag.alvesg@gmail.com') {
+          sessionStorage.setItem('userType', 'super_admin');
+          sessionStorage.removeItem('currentRestaurant');
+          navigate(createPageUrl('SuperAdmin'));
+          return;
+        }
+
         const restaurant = restaurants.find(r => r.owner_email === data.user.email);
 
         if (restaurant) {
