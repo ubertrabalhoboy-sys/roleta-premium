@@ -15,7 +15,8 @@ export default function Home() {
 
   const { data: restaurants = [] } = useQuery({
     queryKey: ['restaurants'],
-    queryFn: () => supabaseHelper.Restaurant.list()
+    queryFn: () => supabaseHelper.Restaurant.list(),
+    staleTime: 300000 // Cache por 5 minutos
   });
 
   const handleLogin = async (e) => {
