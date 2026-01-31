@@ -13,14 +13,29 @@ export default function Home() {
   const [email, setEmail] = useState('admin@restaurante.com');
   const [password, setPassword] = useState('');
 
+  // Verificação de segurança do Supabase
+  useEffect(() => {
+    if (!supabase) {
+      console.error('❌ Supabase não está configurado!');
+      alert('Erro de configuração: Supabase não inicializado. Verifique as variáveis de ambiente.');
+    }
+  }, []);
+
   const { data: restaurants = [] } = useQuery({
     queryKey: ['restaurants'],
     queryFn: () => supabaseHelper.Restaurant.list(),
-    staleTime: 300000 // Cache por 5 minutos
+    staleTime: 300000, // Cache por 5 minutos
+    enabled: !!supabase // Só executa se supabase estiver disponível
   });
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    // Verificação de segurança
+    if (!supabase) {
+      alert('Erro: Supabase não está configurado. Verifique as variáveis de ambiente.');
+      return;
+    }
 
     try {
       if (email.includes('super')) {
